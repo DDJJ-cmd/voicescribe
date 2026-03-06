@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>VoiceScribe Pro</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --panel-2: #1e2330;
+      --line: #2d3443;
+      --text: #f4f6fb;
+      --muted: #9aa3b2;
+      --gold: #c9a96e;
+      --blue: #6aa8ff;
+      --green: #37c28c;
+      --red: #ee6b6e;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { min-height: 100dvh; }
+    .app { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    .header, .footer, .panel { background: rgba(23,26,33,.96); border: 1px solid var(--line); border-radius: 16px; }
+    .header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 18px; margin-bottom: 16px; }
+    .brand h1 { margin: 0; font-size: 20px; letter-spacing: .06em; }
+    .brand p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .status { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
+    .dot { width: 10px; height: 10px; border-radius: 999px; background: #5a6270; }
+    .dot.on { background: var(--green); box-shadow: 0 0 12px rgba(55,194,140,.7); }
+    .grid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; }
+    .panel { padding: 16px; }
+    .panel h2 { margin: 0 0 14px; font-size: 13px; color: var(--gold); letter-spacing: .12em; text-transform: uppercase; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; margin-bottom: 6px; font-size: 12px; color: var(--muted); }
+    input, select, textarea, button {
+      width: 100%; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text);
+      padding: 12px 14px; font-size: 14px;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    button { cursor: pointer; transition: .2s ease; }
+    button:hover { border-color: var(--gold); }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .big-btn { min-height: 56px; font-weight: 700; }
+    .primary { background: linear-gradient(180deg, #27415f, #1f3248); }
+    .danger { background: linear-gradient(180deg, #5a2323, #431a1a); }
+    .muted { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+    .stat .v { font-size: 22px; font-weight: 700; }
+    .stat .k { color: var(--muted); font-size: 11px; margin-top: 4px; }
+    .transcript-box { min-height: 52dvh; display: flex; flex-direction: column; gap: 10px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; }
+    .toolbar button { width: auto; }
+    .log { background: #0c0f15; border: 1px solid var(--line); border-radius: 14px; padding: 14px; min-height: 420px; overflow: auto; }
+    .placeholder { color: var(--muted); text-align: center; padding: 60px 20px; }
+    .entry { border-bottom: 1px solid rgba(255,255,255,.06); padding: 10px 0; }
+    .entry:last-child { border-bottom: 0; }
+    .meta { color: var(--gold); font-size: 11px; margin-bottom: 5px; }
+    .orig { font-size: 15px; line-height: 1.7; white-space: pre-wrap; }
+    .tran { margin-top: 8px; padding: 10px 12px; border-left: 3px solid var(--blue); background: rgba(106,168,255,.08); border-radius: 0 10px 10px 0; color: #bcd7ff; white-space: pre-wrap; }
+    .interim { color: #b7c1d1; font-style: italic; opacity: .85; padding: 8px 0; }
+    .footer { margin-top: 16px; padding: 12px 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+    .toast { position: fixed; left: 16px; right: 16px; bottom: 16px; background: rgba(238,107,110,.14); border: 1px solid var(--red); color: #ffb7b8; border-radius: 14px; padding: 12px 14px; display: none; z-index: 20; }
+    .toast.show { display: block; }
+    .note { background: rgba(201,169,110,.08); border: 1px solid rgba(201,169,110,.3); border-radius: 12px; padding: 12px; color: #e3c58f; font-size: 12px; line-height: 1.6; }
+    .wave { display: flex; gap: 3px; align-items: end; height: 22px; }
+    .bar { width: 4px; height: 5px; border-radius: 999px; background: var(--gold); opacity: .35; }
+    .wave.on .bar { animation: wave .9s ease-in-out infinite; opacity: 1; }
+    .wave .bar:nth-child(1){animation-delay:0s}.wave .bar:nth-child(2){animation-delay:.1s}.wave .bar:nth-child(3){animation-delay:.2s}.wave .bar:nth-child(4){animation-delay:.1s}.wave .bar:nth-child(5){animation-delay:0s}
+    @keyframes wave { 0%,100%{height:5px} 50%{height:20px} }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .header { align-items: flex-start; flex-direction: column; }
+      .transcript-box { min-height: auto; }
+      .log { min-height: 45dvh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="brand">
+        <h1>VoiceScribe Pro</h1>
+        <p>会議のリアルタイム文字起こし・翻訳・録音保存・議事録用下準備</p>
+      </div>
+      <div class="status">
+        <div class="dot" id="statusDot"></div>
+        <div id="statusText">STANDBY</div>
+        <div id="clock"></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>Controls</h2>
+
+        <div class="note" style="margin-bottom:14px;">
+          GitHub Pages で動かせる静的版です。<br>
+          英語中心の会議では「認識言語=English」「翻訳先=日本語」推奨です。<br>
+          自分が日本語で話す場面が長いときは、認識言語を日本語へ切り替えてください。
+        </div>
+
+        <div class="field">
+          <label for="speechLang">認識言語</label>
+          <select id="speechLang">
+            <option value="en-US">English (US)</option>
+            <option value="en-GB">English (UK)</option>
+            <option value="ja-JP">日本語</option>
+            <option value="zh-CN">中文（简体）</option>
+            <option value="ko-KR">한국어</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="targetLang">翻訳先言語</label>
+          <select id="targetLang">
+            <option value="JA">日本語</option>
+            <option value="EN">English</option>
+            <option value="ZH">中文</option>
+            <option value="KO">한국어</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="apiKey">DeepL API Key</label>
+          <input id="apiKey" type="password" placeholder="xxxx-xxxx-xxxx:fx" />
+          <div class="muted" style="margin-top:8px;">翻訳に使います。空欄でも文字起こしと録音保存は可能です。</div>
+        </div>
+
+        <div class="field">
+          <label for="meetingTitle">会議タイトル</label>
+          <input id="meetingTitle" type="text" placeholder="例: Fusion Monthly Review" />
+        </div>
+
+        <div class="btn-row" style="margin-bottom:10px;">
+          <button class="big-btn primary" id="startBtn">録音開始</button>
+          <button class="big-btn danger" id="stopBtn" disabled>停止</button>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
+          <div class="wave" id="wave"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+          <div class="muted" id="micHint">マイク許可後に開始してください</div>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><div class="v" id="dur">0:00</div><div class="k">経過時間</div></div>
+          <div class="stat"><div class="v" id="cnt">0</div><div class="k">発言数</div></div>
+          <div class="stat"><div class="v" id="chs">0</div><div class="k">文字数</div></div>
+          <div class="stat"><div class="v" id="trc">0</div><div class="k">翻訳数</div></div>
+        </div>
+      </div>
+
+      <div class="panel transcript-box">
+        <h2>Transcript</h2>
+        <div class="toolbar">
+          <button id="copyBtn">全文コピー</button>
+          <button id="saveTxtBtn">TXT保存</button>
+          <button id="saveJsonBtn">JSON保存</button>
+          <button id="saveAudioBtn">録音保存</button>
+          <button id="promptBtn">議事録用プロンプト生成</button>
+          <button id="clearBtn">クリア</button>
+        </div>
+        <div class="log" id="log">
+          <div class="placeholder" id="placeholder">録音開始で、発言の文字起こしと翻訳をここに表示します。</div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="promptOut">ChatGPTに貼る用プロンプト</label>
+          <textarea id="promptOut" placeholder="ここに議事録作成用のプロンプトが生成されます"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>Web Speech API + MediaRecorder + DeepL API</div>
+      <div>GitHub Pages 配置用 / フロントエンド単体版</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    let recognition = null;
+    let mediaRecorder = null;
+    let mediaStream = null;
+    let chunks = [];
+    let audioBlob = null;
+    let running = false;
+    let startedAt = null;
+    let timer = null;
+    let entries = [];
+    let interimEl = null;
+
+    let stats = { count: 0, chars: 0, translations: 0 };
+
+    function toast(msg) {
+      const el = $('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+    }
+
+    function updateClock() {
+      $('clock').textContent = new Date().toLocaleTimeString('ja-JP', { hour12: false });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    function updateStats() {
+      $('cnt').textContent = stats.count;
+      $('chs').textContent = stats.chars;
+      $('trc').textContent = stats.translations;
+    }
+
+    function setUi(on) {
+      running = on;
+      $('statusDot').classList.toggle('on', on);
+      $('statusText').textContent = on ? 'RECORDING' : 'STANDBY';
+      $('wave').classList.toggle('on', on);
+      $('startBtn').disabled = on;
+      $('stopBtn').disabled = !on;
+      $('micHint').textContent = on ? '録音中です。停止で音声保存できます' : 'マイク許可後に開始してください';
+    }
+
+    function tickDuration() {
+      if (!startedAt) return;
+      const sec = Math.floor((Date.now() - startedAt) / 1000);
+      const m = Math.floor(sec / 60);
+      const s = String(sec % 60).padStart(2, '0');
+      $('dur').textContent = `${m}:${s}`;
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    async function translateText(text) {
+      const key = $('apiKey').value.trim();
+      if (!key) return null;
+      const targetLang = $('targetLang').value;
+      const endpoint = key.includes(':fx')
+        ? 'https://api-free.deepl.com/v2/translate'
+        : 'https://api.deepl.com/v2/translate';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Authorization': `DeepL-Auth-Key ${key}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({ text, target_lang: targetLang })
+        });
+        if (!res.ok) {
+          toast(`DeepLエラー: ${res.status}`);
+          return null;
+        }
+        const data = await res.json();
+        return data?.translations?.[0]?.text || null;
+      } catch (e) {
+        toast('翻訳通信エラー');
+        return null;
+      }
+    }
+
+    async function addFinalEntry(text, lang) {
+      $('placeholder')?.remove();
+
+      const time = new Date().toLocaleTimeString('ja-JP', { hour12: false });
+      const item = { time, original: text, lang, translation: null };
+      entries.push(item);
+      stats.count += 1;
+      stats.chars += text.length;
+      updateStats();
+
+      const wrap = document.createElement('div');
+      wrap.className = 'entry';
+      wrap.innerHTML = `
+        <div class="meta">${time} · ${escHtml(lang)}</div>
+        <div class="orig">${escHtml(text)}</div>
+      `;
+      $('log').appendChild(wrap);
+      $('log').scrollTop = $('log').scrollHeight;
+
+      const recLang = $('speechLang').value;
+      const targetLang = $('targetLang').value;
+      const needsTranslation = !!$('apiKey').value.trim() && !((recLang.startsWith('ja') && targetLang === 'JA') || (recLang.startsWith('en') && targetLang === 'EN'));
+
+      if (needsTranslation) {
+        const tranEl = document.createElement('div');
+        tranEl.className = 'tran';
+        tranEl.textContent = '翻訳中…';
+        wrap.appendChild(tranEl);
+
+        const translated = await translateText(text);
+        if (translated) {
+          item.translation = translated;
+          tranEl.textContent = translated;
+          stats.translations += 1;
+          updateStats();
+        } else {
+          tranEl.textContent = '翻訳なし';
+        }
+      }
+    }
+
+    function buildRecognition() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return null;
+      const r = new SR();
+      r.lang = $('speechLang').value;
+      r.continuous = true;
+      r.interimResults = true;
+
+      r.onresult = async (event) => {
+        let interimText = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          const text = result[0].transcript.trim();
+          if (!text) continue;
+          if (result.isFinal) {
+            if (interimEl) { interimEl.remove(); interimEl = null; }
+            await addFinalEntry(text, $('speechLang').value);
+          } else {
+            interimText += text + ' ';
+          }
+        }
+        if (interimText) {
+          $('placeholder')?.remove();
+          if (!interimEl) {
+            interimEl = document.createElement('div');
+            interimEl.className = 'interim';
+            interimEl.id = 'interim';
+            $('log').appendChild(interimEl);
+          }
+          interimEl.textContent = interimText.trim();
+          $('log').scrollTop = $('log').scrollHeight;
+        }
+      };
+
+      r.onerror = (e) => {
+        if (e.error === 'not-allowed') toast('マイク権限が拒否されました。ブラウザ設定で許可してください。');
+        else if (e.error === 'language-not-supported') toast('その認識言語は未対応です。');
+        else if (e.error !== 'no-speech') toast('音声認識エラー: ' + e.error);
+      };
+
+      r.onend = () => {
+        if (running && recognition) {
+          try { recognition.start(); } catch (_) {}
+        }
+      };
+      return r;
+    }
+
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaStream = stream;
+      } catch (e) {
+        toast('マイクに接続できません。Safari/ChromeでHTTPSページを開き、マイク許可をしてください。');
+        return;
+      }
+
+      try {
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
+        mediaRecorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
+        chunks = [];
+        audioBlob = null;
+        mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+          audioBlob = new Blob(chunks, { type: chunks[0]?.type || 'audio/webm' });
+        };
+        mediaRecorder.start();
+      } catch (e) {
+        toast('録音開始に失敗しました。');
+      }
+
+      recognition = buildRecognition();
+      if (!recognition) {
+        toast('このブラウザはWeb Speech APIに未対応です。PC Chrome / iPhone Safari を試してください。');
+      } else {
+        try {
+          recognition.start();
+        } catch (e) {
+          toast('音声認識の開始に失敗しました。');
+        }
+      }
+
+      startedAt = Date.now();
+      clearInterval(timer);
+      timer = setInterval(tickDuration, 1000);
+      tickDuration();
+      setUi(true);
+    }
+
+    function stopRecording() {
+      setUi(false);
+      clearInterval(timer);
+      timer = null;
+
+      if (recognition) {
+        try { recognition.onend = null; recognition.stop(); } catch (_) {}
+      }
+      recognition = null;
+
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+      }
+      mediaStream = null;
+
+      if (interimEl) { interimEl.remove(); interimEl = null; }
+    }
+
+    function getTranscriptText() {
+      return entries.map(e => {
+        const tr = e.translation ? `\n訳: ${e.translation}` : '';
+        return `[${e.time}] (${e.lang})\n原文: ${e.original}${tr}`;
+      }).join('\n\n');
+    }
+
+    function downloadBlob(blob, fileName) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1200);
+    }
+
+    function saveText() {
+      const text = getTranscriptText() || 'No transcript';
+      downloadBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), makeBaseName() + '.txt');
+    }
+
+    function saveJson() {
+      downloadBlob(new Blob([JSON.stringify({
+        title: $('meetingTitle').value.trim(),
+        created_at: new Date().toISOString(),
+        speech_lang: $('speechLang').value,
+        target_lang: $('targetLang').value,
+        entries
+      }, null, 2)], { type: 'application/json' }), makeBaseName() + '.json');
+    }
+
+    function saveAudio() {
+      if (!audioBlob) {
+        toast('保存できる録音データがまだありません。録音停止後に実行してください。');
+        return;
+      }
+      const ext = audioBlob.type.includes('mp4') ? 'm4a' : 'webm';
+      downloadBlob(audioBlob, makeBaseName() + '.' + ext);
+    }
+
+    function makeBaseName() {
+      const title = ($('meetingTitle').value.trim() || 'meeting').replace(/[^a-zA-Z0-9ぁ-んァ-ン一-龥-_]+/g, '_');
+      const d = new Date();
+      const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+      return `${title}_${stamp}`;
+    }
+
+    async function copyAll() {
+      const text = getTranscriptText();
+      if (!text) { toast('コピーする内容がありません。'); return; }
+      try {
+        await navigator.clipboard.writeText(text);
+        toast('全文をコピーしました。');
+      } catch (e) {
+        toast('コピーに失敗しました。');
+      }
+    }
+
+    function clearAll() {
+      entries = [];
+      stats = { count: 0, chars: 0, translations: 0 };
+      updateStats();
+      $('dur').textContent = '0:00';
+      $('log').innerHTML = '<div class="placeholder" id="placeholder">録音開始で、発言の文字起こしと翻訳をここに表示します。</div>';
+      $('promptOut').value = '';
+      audioBlob = null;
+      chunks = [];
+    }
+
+    function buildPrompt() {
+      const title = $('meetingTitle').value.trim() || '会議';
+      const source = getTranscriptText();
+      if (!source) {
+        toast('まず文字起こしを行ってください。');
+        return;
+      }
+      const prompt = `以下は ${title} の文字起こしです。\n\nやってほしいこと:\n1. 発言内容を整理して日本語で議事録を作成\n2. 決定事項 / 保留事項 / To Do / 発言要旨 を分ける\n3. 英語話者の発言は意味が自然になるよう日本語で要約\n4. 明らかな誤認識があれば文脈から軽く補正\n5. 箇条書きの後に、最後に3行程度の全体要約を付ける\n\n--- 文字起こし開始 ---\n${source}\n--- 文字起こし終了 ---`;
+      $('promptOut').value = prompt;
+      toast('議事録用プロンプトを生成しました。');
+    }
+
+    $('startBtn').addEventListener('click', startRecording);
+    $('stopBtn').addEventListener('click', stopRecording);
+    $('copyBtn').addEventListener('click', copyAll);
+    $('saveTxtBtn').addEventListener('click', saveText);
+    $('saveJsonBtn').addEventListener('click', saveJson);
+    $('saveAudioBtn').addEventListener('click', saveAudio);
+    $('clearBtn').addEventListener('click', clearAll);
+    $('promptBtn').addEventListener('click', buildPrompt);
+
+    window.addEventListener('beforeunload', () => {
+      try { if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); } catch (_) {}
+      try { if (mediaStream) mediaStream.getTracks().forEach(t => t.stop()); } catch (_) {}
+      try { if (recognition) recognition.stop(); } catch (_) {}
+    });
+  </script>
+</body>
+</html>
