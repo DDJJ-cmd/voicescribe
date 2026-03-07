@@ -96,9 +96,9 @@
       <h2 class="title">Controls</h2>
 
       <div class="note">
-        これは <strong>GitHub Pagesで動く静的HTML版</strong> です。<br>
-        リアルタイム文字起こしはブラウザの音声認識を使い、<strong>同時翻訳っぽく</strong> するために途中経過も翻訳表示します。<br>
-        <strong>真の話者分離</strong> は録音後にAIへ音声を送って実行する方式です。
+        この版は <strong>翻訳を Cloudflare Worker 経由</strong> に変更しています。<br>
+        そのため <strong>DeepL APIキーを画面に入れる必要はありません</strong>。<br>
+        Worker URL にテキストを送り、日本語翻訳を受け取ります。
       </div>
 
       <div class="field">
@@ -147,14 +147,15 @@
       </div>
 
       <div class="field">
-        <label for="deeplKey">DeepL API Key（翻訳）</label>
-        <input id="deeplKey" type="password" placeholder="xxxx-xxxx-xxxx:fx" />
+        <label for="workerBaseUrl">Cloudflare Worker URL（翻訳用）</label>
+        <input id="workerBaseUrl" type="text" value="https://divine-moon-7052.jsmgoo11185.workers.dev" />
+        <div class="mini" style="margin-top:8px;">末尾に <code>/translate?text=...</code> を付けて翻訳します。</div>
       </div>
 
       <div class="field">
         <label for="openaiKey">OpenAI API Key（AI要約・議事録・話者分離）</label>
         <input id="openaiKey" type="password" placeholder="sk-..." />
-        <div class="mini" style="margin-top:8px;">このHTMLはブラウザから直接APIを呼ぶため、鍵は端末上に保持されます。あとでCloudflare Workersなどの小さな中継に置き換えるとより安全です。</div>
+        <div class="mini" style="margin-top:8px;">AI要約・議事録・話者分離に使います。未入力でも翻訳は動きます。</div>
       </div>
 
       <div class="field">
@@ -235,7 +236,7 @@
   </div>
 
   <div class="footer">
-    <div>GitHub Pages 静的版 / DeepL + OpenAI 任意連携</div>
+    <div>GitHub Pages 静的版 / Cloudflare Worker 翻訳 + OpenAI 任意連携</div>
     <div>iPhone / PC 対応</div>
   </div>
 </div>
@@ -244,7 +245,7 @@
 
 <script>
   const $ = id => document.getElementById(id);
-  const STORAGE_KEY = 'voicescribe_ai_session_v1';
+  const STORAGE_KEY = 'voicescribe_ai_session_v2';
 
   let recognition = null;
   let mediaRecorder = null;
@@ -272,10 +273,15 @@
     window.__toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
   }
 
-  function updateClock(){ $('clock').textContent = new Date().toLocaleTimeString('ja-JP',{hour12:false}); }
-  updateClock(); setInterval(updateClock,1000);
+  function updateClock(){
+    $('clock').textContent = new Date().toLocaleTimeString('ja-JP',{hour12:false});
+  }
+  updateClock();
+  setInterval(updateClock,1000);
 
-  function escHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escHtml(str){
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
 
   function detectLang(text){
     const ja = (text.match(/[ぁ-んァ-ン一-龥]/g)||[]).length;
@@ -318,6 +324,7 @@
       meetingTitle:$('meetingTitle').value,
       speechLang:$('speechLang').value,
       targetLang:$('targetLang').value,
+      workerBaseUrl:$('workerBaseUrl').value,
       promptOut:$('promptOut').value,
       summaryArea:$('summaryArea').textContent,
       diarizeArea:$('diarizeArea').textContent,
@@ -339,6 +346,7 @@
       $('meetingTitle').value = d.meetingTitle || '';
       $('speechLang').value = d.speechLang || 'en-US';
       $('targetLang').value = d.targetLang || 'JA';
+      $('workerBaseUrl').value = d.workerBaseUrl || 'https://divine-moon-7052.jsmgoo11185.workers.dev';
       $('promptOut').value = d.promptOut || '';
       $('summaryArea').textContent = d.summaryArea || 'AIリアルタイム要約はここに表示されます。';
       $('diarizeArea').textContent = d.diarizeArea || 'AI話者分離の結果はここに表示されます。';
@@ -349,7 +357,9 @@
       renderEntries();
       updateStats();
       if(showToast) toast('前回セッションを復元しました。');
-    }catch(e){ if(showToast) toast('復元に失敗しました。'); }
+    }catch(e){
+      if(showToast) toast('復元に失敗しました。');
+    }
   }
 
   function renderEntries(){
@@ -413,19 +423,25 @@
   }
 
   async function translateWithDeepL(text){
-  try{
-    const endpoint = "https://divine-moon-7052.jsmgoo11185.workers.dev/translate?text=" + encodeURIComponent(text);
-    const res = await fetch(endpoint);
-    if(!res.ok){
-      throw new Error("Worker error: " + res.status);
+    try{
+      const base = $('workerBaseUrl').value.trim().replace(/\/+$/,'');
+      if(!base) throw new Error('Worker URLがありません');
+      const target = $('targetLang').value || 'JA';
+      const source = detectLang(text) === 'ja' ? 'JA' : 'EN';
+      const endpoint = `${base}/translate?text=${encodeURIComponent(text)}&source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}`;
+      const res = await fetch(endpoint);
+      if(!res.ok){
+        throw new Error("Worker error: " + res.status);
+      }
+      const data = await res.json();
+      return data?.translations?.[0]?.text || null;
+    }catch(e){
+      console.error(e);
+      toast('翻訳エラー');
+      return null;
     }
-    const data = await res.json();
-    return data?.translations?.[0]?.text || null;
-  }catch(e){
-    console.error(e);
-    return null;
   }
-}
+
   function extractOutputText(data){
     if(data?.output_text) return data.output_text;
     if(Array.isArray(data?.output)){
@@ -440,7 +456,10 @@
     const model = $('openaiModel').value.trim() || 'gpt-5.4';
     const res = await fetch('https://api.openai.com/v1/responses',{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':`Bearer ${apiKey}`
+      },
       body:JSON.stringify({
         model,
         input: promptText
@@ -455,9 +474,15 @@
   }
 
   async function diarizeWithOpenAIAudio(){
-    if(!audioBlob){ toast('まず録音を停止して音声データを確定してください。'); return; }
+    if(!audioBlob){
+      toast('まず録音を停止して音声データを確定してください。');
+      return;
+    }
     const apiKey = $('openaiKey').value.trim();
-    if(!apiKey){ toast('OpenAI APIキーを入力してください。'); return; }
+    if(!apiKey){
+      toast('OpenAI APIキーを入力してください。');
+      return;
+    }
     $('diarizeArea').textContent = 'AI話者分離 実行中…';
     try{
       const ext = audioBlob.type.includes('mp4') ? 'm4a' : 'webm';
@@ -501,12 +526,9 @@
 
   function shouldTranslateFinal(text){
     const target = $('targetLang').value;
-    const rec = $('speechLang').value;
     const langTag = detectLang(text);
-    if(!$('deeplKey').value.trim()) return false;
     if(langTag === 'ja' && target === 'JA') return false;
     if(langTag === 'en' && target === 'EN') return false;
-    if(rec.startsWith('ja') && target === 'JA' && langTag !== 'en') return false;
     return true;
   }
 
@@ -610,13 +632,17 @@
   function scheduleInterimTranslation(){
     clearTimeout(interimTimer);
     interimTimer = setTimeout(async () => {
-      if(!latestInterim){ $('interimTran').textContent = 'まだありません'; return; }
-      if(!$('deeplKey').value.trim()){ $('interimTran').textContent = 'DeepLキー未設定'; return; }
+      if(!latestInterim){
+        $('interimTran').textContent = 'まだありません';
+        return;
+      }
+
       if(detectLang(latestInterim) === 'ja' && $('targetLang').value === 'JA'){
         latestInterimTranslated = latestInterim;
         $('interimTran').textContent = latestInterimTranslated;
         return;
       }
+
       $('interimTran').textContent = '翻訳中…';
       const translated = await translateWithDeepL(latestInterim);
       latestInterimTranslated = translated || '翻訳なし';
@@ -654,7 +680,10 @@
   }
 
   async function generateMinutes(){
-    if(!entries.length){ toast('まず文字起こしをしてください。'); return; }
+    if(!entries.length){
+      toast('まず文字起こしをしてください。');
+      return;
+    }
     const transcript = getTranscriptText();
     const prompt = `以下は会議の文字起こしです。\n\nやってほしいこと:\n1. 自然な日本語で議事録を作成\n2. 「会議概要」「決定事項」「保留事項」「To Do」「主な論点」「数値・固有名詞」に分ける\n3. 英語話者の発言は自然な日本語に整える\n4. 推測は「要確認」と明記する\n5. 最後に次回までの確認事項を3〜5個書く\n\n--- 文字起こし開始 ---\n${transcript}\n--- 文字起こし終了 ---`;
     $('promptOut').value = prompt;
@@ -678,7 +707,10 @@
   }
 
   function buildPromptOnly(){
-    if(!entries.length){ toast('まず文字起こしをしてください。'); return; }
+    if(!entries.length){
+      toast('まず文字起こしをしてください。');
+      return;
+    }
     const prompt = `以下は会議の文字起こしです。\n\nやってほしいこと:\n1. 自然な日本語で議事録を作成\n2. 「会議概要」「決定事項」「保留事項」「To Do」「主な論点」「数値・固有名詞」に分ける\n3. 英語話者の発言は自然な日本語に整える\n4. 推測は「要確認」と明記する\n5. 最後に次回までの確認事項を3〜5個書く\n\n--- 文字起こし開始 ---\n${getTranscriptText()}\n--- 文字起こし終了 ---`;
     $('promptOut').value = prompt;
     saveSession();
@@ -693,7 +725,10 @@
   }
 
   async function refreshSummaryManual(){
-    if(!entries.length){ toast('まず文字起こしをしてください。'); return; }
+    if(!entries.length){
+      toast('まず文字起こしをしてください。');
+      return;
+    }
     if(!$('openaiKey').value.trim()){
       const rough = entries.slice(-5).map(e => '• ' + (e.translation || e.original)).join('\n');
       $('summaryArea').textContent = '簡易要約（AIキー未設定）\n' + rough;
@@ -754,7 +789,10 @@
   }
 
   function saveAudio(){
-    if(!audioBlob){ toast('録音停止後に保存してください。'); return; }
+    if(!audioBlob){
+      toast('録音停止後に保存してください。');
+      return;
+    }
     const ext = audioBlob.type.includes('mp4') ? 'm4a' : 'webm';
     downloadBlob(audioBlob, makeBaseName()+'.'+ext);
   }
@@ -764,16 +802,23 @@
       if($('autoSaveText').checked && entries.length) saveText();
       if($('autoSaveJson').checked && entries.length) saveJson();
       if($('autoSaveAudio').checked && audioBlob) saveAudio();
-    }catch(e){ toast('自動保存の一部に失敗しました。'); }
+    }catch(e){
+      toast('自動保存の一部に失敗しました。');
+    }
   }
 
   async function copyAll(){
     const text = getTranscriptText();
-    if(!text){ toast('コピーする内容がありません。'); return; }
+    if(!text){
+      toast('コピーする内容がありません。');
+      return;
+    }
     try{
       await navigator.clipboard.writeText(text);
       toast('全文をコピーしました。');
-    }catch(e){ toast('コピーに失敗しました。'); }
+    }catch(e){
+      toast('コピーに失敗しました。');
+    }
   }
 
   function clearAll(){
@@ -837,14 +882,27 @@
 
   function stopRecording(){
     setUi(false);
-    clearInterval(timer); timer = null;
-    if(recognition){ try{ recognition.onend = null; recognition.stop(); }catch(_){} }
+    clearInterval(timer);
+    timer = null;
+
+    if(recognition){
+      try{ recognition.onend = null; recognition.stop(); }catch(_){}
+    }
     recognition = null;
-    if(mediaRecorder && mediaRecorder.state !== 'inactive'){ mediaRecorder.stop(); }
-    else { maybeAutoSave(); }
-    if(mediaStream){ mediaStream.getTracks().forEach(t => t.stop()); }
+
+    if(mediaRecorder && mediaRecorder.state !== 'inactive'){
+      mediaRecorder.stop();
+    }else{
+      maybeAutoSave();
+    }
+
+    if(mediaStream){
+      mediaStream.getTracks().forEach(t => t.stop());
+    }
     mediaStream = null;
-    latestInterim = ''; latestInterimTranslated = '';
+
+    latestInterim = '';
+    latestInterimTranslated = '';
     $('interimOrig').textContent = 'まだありません';
     $('interimTran').textContent = 'まだありません';
     saveSession();
@@ -886,6 +944,7 @@
   $('speechLang').addEventListener('change', () => { saveSession(); restartRecognitionWithCurrentLang(); });
   $('targetLang').addEventListener('change', saveSession);
   $('meetingTitle').addEventListener('input', saveSession);
+  $('workerBaseUrl').addEventListener('input', saveSession);
   $('autoSaveText').addEventListener('change', saveSession);
   $('autoSaveJson').addEventListener('change', saveSession);
   $('autoSaveAudio').addEventListener('change', saveSession);
