@@ -71,6 +71,7 @@
     .toast{position:fixed;left:16px;right:16px;bottom:16px;background:rgba(239,114,117,.14);border:1px solid var(--red);color:#ffc0c1;border-radius:14px;padding:12px 14px;display:none;z-index:20}
     .toast.show{display:block}
     .footer{margin-top:14px;padding:12px 16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+    code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:6px}
     @keyframes wave{0%,100%{height:5px}50%{height:20px}}
     @media (max-width:1020px){.grid{grid-template-columns:1fr}.mainRight{min-height:auto}.stats{grid-template-columns:1fr 1fr}}
     @media (max-width:640px){.row2,.row3,.interimWrap,.stats{grid-template-columns:1fr}.toolbar button{width:100%}.app{padding:10px}}
@@ -81,7 +82,7 @@
   <div class="header">
     <div class="brand">
       <h1>VoiceScribe AI</h1>
-      <p>同時翻訳寄り / AI要約 / 議事録生成 / 録音保存 / 話者分離(会議後AI)</p>
+      <p>Pause待ち同時翻訳 / AI要約 / 議事録生成 / 録音保存 / 話者分離(会議後AI)</p>
     </div>
     <div class="status">
       <div class="dot" id="statusDot"></div>
@@ -96,9 +97,9 @@
       <h2 class="title">Controls</h2>
 
       <div class="note">
-        この版は <strong>翻訳を Cloudflare Worker 経由</strong> に変更しています。<br>
-        そのため <strong>DeepL APIキーを画面に入れる必要はありません</strong>。<br>
-        Worker URL にテキストを送り、日本語翻訳を受け取ります。
+        翻訳は <strong>Cloudflare Worker 経由</strong> です。<br>
+        途中翻訳は <strong>相手の発話が続く間は待機</strong>し、<strong>短い pause（既定 700ms）</strong> が入ったら実行します。<br>
+        そのため、ビジネスMTでの途中切れを減らしつつ、できるだけ一文字も取り逃がしにくい設計です。
       </div>
 
       <div class="field">
@@ -150,6 +151,18 @@
         <label for="workerBaseUrl">Cloudflare Worker URL（翻訳用）</label>
         <input id="workerBaseUrl" type="text" value="https://divine-moon-7052.jsmgoo11185.workers.dev" />
         <div class="mini" style="margin-top:8px;">末尾に <code>/translate?text=...</code> を付けて翻訳します。</div>
+      </div>
+
+      <div class="field">
+        <label for="pauseMs">Pause判定（ms）</label>
+        <input id="pauseMs" type="number" value="700" min="250" step="50" />
+        <div class="mini" style="margin-top:8px;">最後の音声更新からこの時間だけ新しい文字が来なかったら途中翻訳を出します。700ms 推奨。</div>
+      </div>
+
+      <div class="field">
+        <label for="minInterimLen">途中翻訳の最小文字数</label>
+        <input id="minInterimLen" type="number" value="18" min="1" step="1" />
+        <div class="mini" style="margin-top:8px;">短すぎる断片は翻訳せず待機します。18〜25 が実用的です。</div>
       </div>
 
       <div class="field">
@@ -245,7 +258,7 @@
 
 <script>
   const $ = id => document.getElementById(id);
-  const STORAGE_KEY = 'voicescribe_ai_session_v2';
+  const STORAGE_KEY = 'voicescribe_ai_session_v3';
 
   let recognition = null;
   let mediaRecorder = null;
@@ -264,6 +277,18 @@
   let latestInterimTranslated = '';
   let recognitionRestarting = false;
   let stats = { count:0, translations:0, english:0, japanese:0 };
+
+  let lastInterimAt = 0;
+
+  function getPauseMs(){
+    const v = Number($('pauseMs').value);
+    return Number.isFinite(v) && v >= 250 ? v : 700;
+  }
+
+  function getMinInterimLen(){
+    const v = Number($('minInterimLen').value);
+    return Number.isFinite(v) && v >= 1 ? v : 18;
+  }
 
   function toast(msg){
     const el = $('toast');
@@ -306,7 +331,7 @@
     $('wave').classList.toggle('on', on);
     $('startBtn').disabled = on;
     $('stopBtn').disabled = !on;
-    $('micHint').textContent = on ? '録音中です。途中翻訳とAI要約が動きます' : 'マイク許可後に開始してください';
+    $('micHint').textContent = on ? '録音中です。pause待ち翻訳とAI要約が動きます' : 'マイク許可後に開始してください';
   }
 
   function tickDuration(){
@@ -325,6 +350,8 @@
       speechLang:$('speechLang').value,
       targetLang:$('targetLang').value,
       workerBaseUrl:$('workerBaseUrl').value,
+      pauseMs:$('pauseMs').value,
+      minInterimLen:$('minInterimLen').value,
       promptOut:$('promptOut').value,
       summaryArea:$('summaryArea').textContent,
       diarizeArea:$('diarizeArea').textContent,
@@ -347,6 +374,8 @@
       $('speechLang').value = d.speechLang || 'en-US';
       $('targetLang').value = d.targetLang || 'JA';
       $('workerBaseUrl').value = d.workerBaseUrl || 'https://divine-moon-7052.jsmgoo11185.workers.dev';
+      $('pauseMs').value = d.pauseMs || '700';
+      $('minInterimLen').value = d.minInterimLen || '18';
       $('promptOut').value = d.promptOut || '';
       $('summaryArea').textContent = d.summaryArea || 'AIリアルタイム要約はここに表示されます。';
       $('diarizeArea').textContent = d.diarizeArea || 'AI話者分離の結果はここに表示されます。';
@@ -591,6 +620,7 @@
     r.lang = $('speechLang').value;
     r.continuous = true;
     r.interimResults = true;
+    r.maxAlternatives = 1;
 
     r.onresult = async (event) => {
       let interimText = '';
@@ -598,6 +628,7 @@
         const result = event.results[i];
         const text = result[0].transcript.trim();
         if(!text) continue;
+
         if(result.isFinal){
           latestInterim = '';
           latestInterimTranslated = '';
@@ -608,10 +639,15 @@
           interimText += text + ' ';
         }
       }
+
       if(interimText){
         latestInterim = interimText.trim();
+        lastInterimAt = Date.now();
         $('interimOrig').textContent = latestInterim;
-        scheduleInterimTranslation();
+
+        if(latestInterim.length >= getMinInterimLen()){
+          scheduleInterimTranslation();
+        }
       }
     };
 
@@ -631,7 +667,17 @@
 
   function scheduleInterimTranslation(){
     clearTimeout(interimTimer);
+
     interimTimer = setTimeout(async () => {
+      const now = Date.now();
+      const silence = now - lastInterimAt;
+      const pauseMs = getPauseMs();
+
+      if(silence < pauseMs){
+        scheduleInterimTranslation();
+        return;
+      }
+
       if(!latestInterim){
         $('interimTran').textContent = 'まだありません';
         return;
@@ -647,7 +693,7 @@
       const translated = await translateWithDeepL(latestInterim);
       latestInterimTranslated = translated || '翻訳なし';
       $('interimTran').textContent = latestInterimTranslated;
-    }, 900);
+    }, getPauseMs());
   }
 
   function buildRecentContext(limit=8){
@@ -945,6 +991,8 @@
   $('targetLang').addEventListener('change', saveSession);
   $('meetingTitle').addEventListener('input', saveSession);
   $('workerBaseUrl').addEventListener('input', saveSession);
+  $('pauseMs').addEventListener('input', saveSession);
+  $('minInterimLen').addEventListener('input', saveSession);
   $('autoSaveText').addEventListener('change', saveSession);
   $('autoSaveJson').addEventListener('change', saveSession);
   $('autoSaveAudio').addEventListener('change', saveSession);
