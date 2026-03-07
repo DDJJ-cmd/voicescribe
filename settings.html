@@ -14,7 +14,6 @@
       --muted:#97a3b8;
       --gold:#c9a96e;
       --green:#34d399;
-      --purple:#aa8dff;
       --radius:18px;
       --shadow:0 10px 28px rgba(0,0,0,.22);
     }
@@ -49,6 +48,7 @@
       gap:12px;
       padding:16px 18px;
       margin-bottom:12px;
+      flex-wrap:wrap;
     }
 
     h1{
@@ -148,20 +148,19 @@
       padding:0 16px 16px;
     }
 
-    button, .back-link{
+    button,a{
       border:1px solid var(--line);
       background:var(--panel2);
       color:var(--text);
       border-radius:14px;
-      padding:12px 18px;
+      padding:12px 14px;
       cursor:pointer;
       text-decoration:none;
       transition:.18s ease;
       font-size:14px;
-      display:inline-block;
     }
 
-    button:hover, .back-link:hover{
+    button:hover,a:hover{
       border-color:var(--gold);
       transform:translateY(-1px);
     }
@@ -188,9 +187,7 @@
       z-index:50;
     }
 
-    .toast.show{
-      display:block;
-    }
+    .toast.show{ display:block; }
   </style>
 </head>
 <body>
@@ -202,8 +199,7 @@
           ここで有効化した内容は、<strong>ChatGPTに議事録を依頼</strong>したときのプロンプトに反映されます。
         </div>
       </div>
-      <!-- ★ history.back() でブラウザ履歴を戻る（GitHub Pages パスに依存しない） -->
-      <button class="ghost" onclick="goBack()">← Back</button>
+      <button id="backBtn" class="ghost" type="button">← Back</button>
     </section>
 
     <section class="box content">
@@ -212,8 +208,7 @@
           <div>
             <div class="title">Speaker Diarization 指示</div>
             <div class="desc">
-              話者ごとに発言を整理するよう、ChatGPTへの依頼文に追加します。<br>
-              ただし、この静的版では本物の音声埋め込み分離は実行しません。
+              可能であれば話者ごとに整理するよう、ChatGPTへの依頼文に追加します。
             </div>
           </div>
           <label class="switch">
@@ -228,7 +223,7 @@
           <div>
             <div class="title">自己紹介 / 呼称抽出 指示</div>
             <div class="desc">
-              発話内の自己紹介、呼びかけ、人名、役職、組織名を拾って、話者や関係者に反映するよう依頼します。
+              発話内の自己紹介、呼びかけ、人名、役職、組織名を拾うよう依頼します。
             </div>
           </div>
           <label class="switch">
@@ -243,7 +238,7 @@
           <div>
             <div class="title">後段AI整理 指示</div>
             <div class="desc">
-              重複、言い淀み、断片表現を整え、読みやすい議事録に仕上げるよう依頼します。
+              重複、言い淀み、断片表現を整理して、読みやすい議事録に整えるよう依頼します。
             </div>
           </div>
           <label class="switch">
@@ -255,8 +250,8 @@
     </section>
 
     <div class="footer">
-      <button id="saveBtn" class="primary">保存して戻る</button>
-      <button class="ghost" onclick="goBack()">キャンセル</button>
+      <button id="saveBtn" class="primary" type="button">保存</button>
+      <button id="backBtn2" class="ghost" type="button">戻る</button>
     </div>
   </div>
 
@@ -275,24 +270,14 @@
       return document.getElementById(id);
     }
 
-    function toast(msg, onDone){
+    function toast(msg){
       const el = $('toast');
       el.textContent = msg;
       el.classList.add('show');
       clearTimeout(window.__toastTimer);
       window.__toastTimer = setTimeout(() => {
         el.classList.remove('show');
-        if(onDone) onDone();
-      }, 1400);
-    }
-
-    // ★ 戻る処理：履歴があれば戻る、なければ index.html へ
-    function goBack(){
-      if(history.length > 1){
-        history.back();
-      }else{
-        window.location.href = 'index.html';
-      }
+      }, 2200);
     }
 
     function loadSettings(){
@@ -300,6 +285,7 @@
         const raw = localStorage.getItem(STORAGE_SETTINGS_KEY);
         const parsed = raw ? JSON.parse(raw) : {};
         const data = { ...DEFAULT_SETTINGS, ...parsed };
+
         $('promptSpeakerDiarization').checked = !!data.promptSpeakerDiarization;
         $('promptNameExtraction').checked = !!data.promptNameExtraction;
         $('promptPostAiCleanup').checked = !!data.promptPostAiCleanup;
@@ -317,11 +303,17 @@
         promptPostAiCleanup: $('promptPostAiCleanup').checked
       };
       localStorage.setItem(STORAGE_SETTINGS_KEY, JSON.stringify(data));
-      // ★ 保存完了後に自動で戻る
-      toast('保存しました', () => { goBack(); });
+      toast('保存しました');
+    }
+
+    function goBack(){
+      window.location.href = './index.html';
     }
 
     $('saveBtn').addEventListener('click', saveSettings);
+    $('backBtn').addEventListener('click', goBack);
+    $('backBtn2').addEventListener('click', goBack);
+
     loadSettings();
   </script>
 </body>
