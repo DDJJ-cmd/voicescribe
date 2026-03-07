@@ -1,3 +1,6 @@
+Index · HTML
+コピー
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -422,6 +425,74 @@
       line-height:1.7;
     }
 
+    /* ── ChatGPT コピー通知モーダル ── */
+    .modal-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.72);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:60;
+      padding:16px;
+      backdrop-filter:blur(6px);
+    }
+
+    .modal-overlay.hidden{
+      display:none;
+    }
+
+    .modal-box{
+      background:#1c2230;
+      border:1px solid var(--gold);
+      border-radius:20px;
+      padding:24px 20px;
+      max-width:420px;
+      width:100%;
+      box-shadow:0 20px 48px rgba(0,0,0,.5);
+    }
+
+    .modal-box h2{
+      margin:0 0 10px;
+      font-size:18px;
+      color:var(--gold);
+    }
+
+    .modal-box p{
+      margin:0 0 18px;
+      color:#c8d1df;
+      font-size:14px;
+      line-height:1.75;
+    }
+
+    .modal-box .step{
+      background:#0b0e14;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px 14px;
+      margin-bottom:10px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .modal-box .step strong{
+      color:var(--text);
+    }
+
+    .modal-actions{
+      display:flex;
+      gap:10px;
+      margin-top:20px;
+    }
+
+    .modal-actions button{
+      flex:1;
+      padding:13px 10px;
+      font-size:14px;
+      font-weight:700;
+    }
+
     .toast{
       position:fixed;
       left:16px;
@@ -512,7 +583,7 @@
           <div class="topActions">
             <div class="chip" id="clock">--:--:--</div>
             <div class="chip" id="recognitionModeChip">Speech: Browser Engine</div>
-            <a class="gearBtn" href="./settings.html" aria-label="設定">⚙️</a>
+            <a class="gearBtn" href="settings.html" aria-label="設定">⚙️</a>
           </div>
         </section>
 
@@ -566,6 +637,20 @@
     </div>
   </div>
 
+  <!-- ChatGPT 案内モーダル -->
+  <div class="modal-overlay hidden" id="gptModal">
+    <div class="modal-box">
+      <h2>📋 ChatGPTで議事録を作成</h2>
+      <p>プロンプトをクリップボードにコピーしました。<br>以下の手順でChatGPTに貼り付けてください。</p>
+      <div class="step"><strong>① ChatGPTを開く</strong><br>下のボタンでChatGPTアプリ（またはブラウザ版）を開きます。</div>
+      <div class="step"><strong>② 貼り付けて送信</strong><br>テキスト入力欄を長押し →「ペースト」→ 送信ボタンを押してください。</div>
+      <div class="modal-actions">
+        <button id="modalOpenGPT" class="accent">ChatGPTを開く</button>
+        <button id="modalClose" class="ghost">閉じる</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -611,6 +696,9 @@
     let activePseudoSpeaker = 'Speaker ?';
     let latestFinalText = '';
 
+    // ─────────────────────────────────────────
+    // Settings
+    // ─────────────────────────────────────────
     function loadSettings(){
       try{
         const raw = localStorage.getItem(STORAGE_SETTINGS_KEY);
@@ -622,6 +710,9 @@
       }
     }
 
+    // ─────────────────────────────────────────
+    // Toast
+    // ─────────────────────────────────────────
     function toast(msg){
       const el = $('toast');
       el.textContent = msg;
@@ -632,12 +723,18 @@
       }, 3200);
     }
 
+    // ─────────────────────────────────────────
+    // Clock
+    // ─────────────────────────────────────────
     function updateClock(){
       $('clock').textContent = new Date().toLocaleTimeString('ja-JP', { hour12:false });
     }
     updateClock();
     setInterval(updateClock, 1000);
 
+    // ─────────────────────────────────────────
+    // Utils
+    // ─────────────────────────────────────────
     function escHtml(str){
       return String(str)
         .replace(/&/g,'&amp;')
@@ -648,10 +745,8 @@
     function detectLang(text){
       const s = String(text || '').trim();
       if(!s) return 'other';
-
       const ja = (s.match(/[ぁ-んァ-ン一-龥]/g) || []).length;
       const en = (s.match(/[A-Za-z]/g) || []).length;
-
       if(ja === 0 && en === 0) return 'other';
       if(ja > en) return 'ja';
       if(en > ja) return 'en';
@@ -687,6 +782,9 @@
       $('dur').textContent = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${s}` : `${m}:${s}`;
     }
 
+    // ─────────────────────────────────────────
+    // Session save / restore
+    // ─────────────────────────────────────────
     function saveSession(){
       try{
         localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify({
@@ -701,35 +799,38 @@
       try{
         const raw = localStorage.getItem(STORAGE_SESSION_KEY);
         if(!raw) return;
-
         const parsed = JSON.parse(raw);
         entries = Array.isArray(parsed.entries) ? parsed.entries : [];
         stats = parsed.stats || { english:0, japanese:0 };
         latestFinalText = parsed.latestFinalText || '';
         $('latestFinal').textContent = latestFinalText || 'まだありません';
-
         renderEntries();
         updateStats();
-
         if(showToast){
           toast('前回の文字起こし表示を復元しました。音声データは復元されません。');
         }
       }catch(_){}
     }
 
+    // ─────────────────────────────────────────
+    // Render
+    // ─────────────────────────────────────────
     function renderEntries(){
       const log = $('log');
-
       if(!entries.length){
         log.innerHTML = '<div class="placeholder" id="placeholder">録音開始で、文字起こしと日本語表示が始まります。</div>';
         return;
       }
-
       log.innerHTML = '';
-
       for(const item of entries){
         const wrap = document.createElement('div');
         wrap.className = 'entry';
+
+        // 日本語エントリは翻訳ブロックなし（原文のみ表示）
+        const tranBlock = (item.translation && item.langTag !== 'ja')
+          ? `<div class="tran">${escHtml(item.translation)}</div>`
+          : '';
+
         wrap.innerHTML = `
           <div class="meta">
             <span>${escHtml(item.time)}</span>
@@ -737,17 +838,15 @@
             <span class="pill ${item.langTag === 'ja' ? 'lng-ja' : 'lng-en'}">${item.langTag === 'ja' ? '日本語' : 'English / Other'}</span>
           </div>
           <div class="orig">${escHtml(item.original || '')}</div>
-          ${item.translation ? `<div class="tran">${escHtml(item.translation)}</div>` : ''}
+          ${tranBlock}
         `;
         log.appendChild(wrap);
       }
-
       log.scrollTop = log.scrollHeight;
     }
 
     function scrollTranscriptBottom(){
-      const log = $('log');
-      log.scrollTop = log.scrollHeight;
+      $('log').scrollTop = $('log').scrollHeight;
     }
 
     function createPseudoSpeaker(){
@@ -758,31 +857,28 @@
       if(!prev) return false;
       if(prev.langTag !== langTag) return false;
       if(!prev._ts) return false;
-
       const within = (Date.now() - prev._ts) <= FINAL_MERGE_MS;
       if(!within) return false;
-
       const prevText = String(prev.original || '').trim();
       if(/[.!?。！？:]$/.test(prevText)) return false;
-
       return true;
     }
 
+    // ─────────────────────────────────────────
+    // Translation（英語のみ DeepL 経由）
+    // ─────────────────────────────────────────
     async function translateWithDeepL(text){
       try{
         const clean = String(text || '').trim();
         if(!clean) return null;
 
+        // ★ 日本語はそのまま返す（翻訳しない）
         const lang = detectLang(clean);
-        if(lang === 'ja') return clean;
+        if(lang === 'ja') return null;
 
         const endpoint = `${WORKER_BASE_URL}/translate?text=${encodeURIComponent(clean)}&source=EN&target=JA`;
         const res = await fetch(endpoint, { method:'GET' });
-
-        if(!res.ok){
-          throw new Error(`Worker error: ${res.status}`);
-        }
-
+        if(!res.ok) throw new Error(`Worker error: ${res.status}`);
         const data = await res.json();
         return data?.translations?.[0]?.text || null;
       }catch(e){
@@ -792,6 +888,9 @@
       }
     }
 
+    // ─────────────────────────────────────────
+    // Final entry
+    // ─────────────────────────────────────────
     async function addFinalEntry(text){
       const clean = String(text || '').trim();
       if(!clean) return;
@@ -821,37 +920,43 @@
         entries.push(item);
       }
 
+      // ★ 日本語の場合は translation を設定しない（原文をそのままログ表示）
+      if(langTag === 'ja'){
+        latestFinalText = item.original;
+        $('latestFinal').textContent = latestFinalText;
+        renderEntries();
+        updateStats();
+        saveSession();
+        return;
+      }
+
+      // 英語の場合は DeepL で翻訳
       latestFinalText = item.original;
       $('latestFinal').textContent = latestFinalText;
-
       renderEntries();
       updateStats();
 
-      if(langTag === 'en'){
-        const translated = await translateWithDeepL(item.original);
-        if(translated){
-          item.translation = translated;
-        }
-      }else if(langTag === 'ja'){
-        item.translation = item.original;
+      const translated = await translateWithDeepL(item.original);
+      if(translated){
+        item.translation = translated;
+        latestFinalText = translated;
+        $('latestFinal').textContent = latestFinalText;
+        renderEntries();
       }
 
-      latestFinalText = item.translation || item.original;
-      $('latestFinal').textContent = latestFinalText;
-
-      renderEntries();
       saveSession();
     }
 
+    // ─────────────────────────────────────────
+    // Interim translation（英語のみ）
+    // ─────────────────────────────────────────
     function scheduleInterimTranslation(){
       clearTimeout(interimTimer);
-
       const scheduledText = latestInterim;
       const mySeq = ++interimRequestSeq;
 
       interimTimer = setTimeout(async () => {
         const silence = Date.now() - lastInterimAt;
-
         if(silence < PAUSE_MS){
           scheduleInterimTranslation();
           return;
@@ -862,21 +967,16 @@
           $('interimTran').textContent = 'まだありません';
           return;
         }
-
-        if(clean.length < MIN_INTERIM_LEN){
-          return;
-        }
-
+        if(clean.length < MIN_INTERIM_LEN) return;
         if(clean !== scheduledText){
           scheduleInterimTranslation();
           return;
         }
-
-        if(clean === lastInterimRequestedText || clean === lastInterimRenderedText){
-          return;
-        }
+        if(clean === lastInterimRequestedText || clean === lastInterimRenderedText) return;
 
         const lang = detectLang(clean);
+
+        // ★ 途中テキストも日本語ならそのまま表示（翻訳しない）
         if(lang === 'ja'){
           latestInterimTranslated = clean;
           lastInterimRenderedText = clean;
@@ -888,7 +988,6 @@
         $('interimTran').textContent = '翻訳中…';
 
         const translated = await translateWithDeepL(clean);
-
         if(mySeq < latestAcceptedInterimSeq) return;
         if(clean !== latestInterim) return;
 
@@ -899,6 +998,9 @@
       }, PAUSE_MS);
     }
 
+    // ─────────────────────────────────────────
+    // Speech Recognition
+    // ─────────────────────────────────────────
     function buildRecognition(){
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if(!SR) return null;
@@ -906,7 +1008,7 @@
       const r = new SR();
       const myId = ++recognitionInstanceId;
 
-      r.lang = 'en-US';
+      r.lang = 'ja-JP'; // ★ 日本語優先モードに変更（日本語・英語混在対応）
       r.continuous = true;
       r.interimResults = true;
       r.maxAlternatives = 1;
@@ -924,10 +1026,8 @@
 
           if(result.isFinal){
             hadFinal = true;
-
             clearTimeout(interimTimer);
             interimTimer = null;
-
             interimRequestSeq += 1;
             latestInterim = '';
             latestInterimTranslated = '';
@@ -935,7 +1035,9 @@
             lastInterimRenderedText = '';
 
             $('interimOrig').textContent = text;
-            $('interimTran').textContent = detectLang(text) === 'ja' ? text : '正式翻訳中…';
+
+            const lang = detectLang(text);
+            $('interimTran').textContent = lang === 'ja' ? text : '正式翻訳中…';
 
             await addFinalEntry(text);
 
@@ -950,7 +1052,6 @@
           latestInterim = interimText.trim();
           lastInterimAt = Date.now();
           $('interimOrig').textContent = latestInterim;
-
           if(latestInterim.length >= MIN_INTERIM_LEN){
             scheduleInterimTranslation();
           }
@@ -959,7 +1060,6 @@
 
       r.onerror = (e) => {
         if(myId !== recognitionInstanceId) return;
-
         if(e.error === 'not-allowed'){
           toast('マイク権限が拒否されました。');
         }else if(e.error === 'audio-capture'){
@@ -972,7 +1072,6 @@
       r.onend = () => {
         if(myId !== recognitionInstanceId) return;
         if(!running) return;
-
         try{
           recognition = buildRecognition();
           if(recognition) recognition.start();
@@ -982,8 +1081,15 @@
       return r;
     }
 
+    // ─────────────────────────────────────────
+    // Transcript text builder
+    // ─────────────────────────────────────────
     function getTranscriptText(){
       return entries.map(e => {
+        // 日本語エントリは翻訳行なし
+        if(e.langTag === 'ja'){
+          return `[${e.time}] ${e.speaker}\n${e.original}`;
+        }
         const tr = e.translation ? `\n日本語: ${e.translation}` : '';
         return `[${e.time}] ${e.speaker}\n原文: ${e.original}${tr}`;
       }).join('\n\n');
@@ -1003,6 +1109,9 @@
       }
     }
 
+    // ─────────────────────────────────────────
+    // Audio save
+    // ─────────────────────────────────────────
     function downloadBlob(blob, fileName){
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1029,25 +1138,25 @@
       downloadBlob(audioBlob, `${makeBaseName()}.${ext}`);
     }
 
+    // ─────────────────────────────────────────
+    // Minutes prompt builder
+    // ─────────────────────────────────────────
     function buildMinutesPrompt(){
       const settings = loadSettings();
       const transcript = getTranscriptText();
 
       const extra = [];
-
       if(settings.promptSpeakerDiarization){
         extra.push('可能であれば話者ごとに発言を整理してください。ただし、話者推定に自信がない箇所は「話者要確認」と明記してください。');
       }
-
       if(settings.promptNameExtraction){
         extra.push('発話内の自己紹介、呼称、相手の呼びかけから、人名・役職名・組織名をできる範囲で抽出し、話者や関係者に反映してください。不確かな場合は「要確認」としてください。');
       }
-
       if(settings.promptPostAiCleanup){
         extra.push('最後に、議事録として読みやすい日本語に整え、重複・言い淀み・断片表現を整理してください。');
       }
 
-      return `以下は会議の文字起こしです。
+      return `以下は会議の文字起こしです。この文字起こしから議事録を作成してください。
 
 やってほしいこと:
 1. 自然な日本語で議事録を作成
@@ -1067,6 +1176,9 @@ ${transcript || '（文字起こしなし）'}
 --- 文字起こし終了 ---`;
     }
 
+    // ─────────────────────────────────────────
+    // ChatGPT ジャンプ（モーダル経由）
+    // ─────────────────────────────────────────
     async function askChatGPTForMinutes(){
       if(!entries.length){
         toast('まず録音してください。');
@@ -1075,18 +1187,35 @@ ${transcript || '（文字起こしなし）'}
 
       const prompt = buildMinutesPrompt();
 
+      // クリップボードにコピー
       try{
         await navigator.clipboard.writeText(prompt);
-      }catch(_){}
+      }catch(_){
+        toast('クリップボードへのコピーに失敗しました。');
+      }
 
-      const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+      // モーダル表示
+      $('gptModal').classList.remove('hidden');
+    }
 
-      if(isMobile){
+    function openChatGPT(){
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if(isIOS){
+        // iOS: ChatGPTアプリへのディープリンクを試み、失敗したらブラウザ版へ
+        window.location.href = 'chatgpt://';
+        setTimeout(() => {
+          window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
+        }, 1200);
+      }else if(isMobile){
+        // Android等
         try{
-          window.location.href = 'chatgpt://';
+          const intent = 'intent://chatgpt.com/#Intent;scheme=https;package=com.openai.chatgpt;end';
+          window.location.href = intent;
           setTimeout(() => {
             window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
-          }, 900);
+          }, 1200);
         }catch(_){
           window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
         }
@@ -1094,9 +1223,17 @@ ${transcript || '（文字起こしなし）'}
         window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
       }
 
-      toast('議事録用プロンプトをコピーしました。ChatGPTで貼り付けて送信してください。');
+      $('gptModal').classList.add('hidden');
     }
 
+    $('modalOpenGPT').addEventListener('click', openChatGPT);
+    $('modalClose').addEventListener('click', () => {
+      $('gptModal').classList.add('hidden');
+    });
+
+    // ─────────────────────────────────────────
+    // Recording start / stop
+    // ─────────────────────────────────────────
     async function startRecording(){
       try{
         mediaStream = await navigator.mediaDevices.getUserMedia({ audio:true });
@@ -1111,7 +1248,6 @@ ${transcript || '（文字起こしなし）'}
           : (window.MediaRecorder && MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
 
         mediaRecorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
-
         chunks = [];
         audioBlob = null;
 
@@ -1153,23 +1289,17 @@ ${transcript || '（文字起こしなし）'}
 
       startedAt = Date.now();
       clearInterval(timer);
-      timer = setInterval(() => {
-        tickDuration();
-      }, 1000);
-
+      timer = setInterval(() => { tickDuration(); }, 1000);
       tickDuration();
       setUi(true);
     }
 
     function stopRecording(){
       setUi(false);
-
       clearInterval(timer);
       timer = null;
-
       clearTimeout(interimTimer);
       interimTimer = null;
-
       recognitionInstanceId += 1;
 
       if(recognition){
@@ -1181,9 +1311,7 @@ ${transcript || '（文字起こしなし）'}
       recognition = null;
 
       if(mediaRecorder && mediaRecorder.state !== 'inactive'){
-        try{
-          mediaRecorder.stop();
-        }catch(_){}
+        try{ mediaRecorder.stop(); }catch(_){}
       }
 
       if(mediaStream){
@@ -1200,28 +1328,26 @@ ${transcript || '（文字起こしなし）'}
     }
 
     function clearAll(){
-      if(running){
-        stopRecording();
-      }
-
+      if(running){ stopRecording(); }
       entries = [];
       stats = { english:0, japanese:0 };
       latestFinalText = '';
       audioBlob = null;
       chunks = [];
       startedAt = null;
-
       $('dur').textContent = '0:00';
       $('interimOrig').textContent = 'まだありません';
       $('interimTran').textContent = 'まだありません';
       $('latestFinal').textContent = 'まだありません';
       $('log').innerHTML = '<div class="placeholder" id="placeholder">録音開始で、文字起こしと日本語表示が始まります。</div>';
-
       localStorage.removeItem(STORAGE_SESSION_KEY);
       updateStats();
       toast('クリアしました。');
     }
 
+    // ─────────────────────────────────────────
+    // Event listeners
+    // ─────────────────────────────────────────
     $('startBtn').addEventListener('click', startRecording);
     $('stopBtn').addEventListener('click', stopRecording);
     $('askChatGPTBtn').addEventListener('click', askChatGPTForMinutes);
@@ -1232,17 +1358,14 @@ ${transcript || '（文字起こしなし）'}
 
     window.addEventListener('beforeunload', () => {
       saveSession();
-      try{
-        if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-      }catch(_){}
-      try{
-        if(mediaStream) mediaStream.getTracks().forEach(t => t.stop());
-      }catch(_){}
-      try{
-        if(recognition) recognition.stop();
-      }catch(_){}
+      try{ if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); }catch(_){}
+      try{ if(mediaStream) mediaStream.getTracks().forEach(t => t.stop()); }catch(_){}
+      try{ if(recognition) recognition.stop(); }catch(_){}
     });
 
+    // ─────────────────────────────────────────
+    // Init
+    // ─────────────────────────────────────────
     restoreSession(false);
     updateStats();
   </script>
