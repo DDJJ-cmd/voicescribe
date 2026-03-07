@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>VoiceScribe AI Settings</title>
+  <style>
+    :root{
+      --bg:#0d1016;
+      --panel:#151a22;
+      --panel2:#1c2230;
+      --line:#2d3647;
+      --text:#f3f6fb;
+      --muted:#97a3b8;
+      --gold:#c9a96e;
+      --green:#34d399;
+      --purple:#aa8dff;
+      --radius:18px;
+      --shadow:0 10px 28px rgba(0,0,0,.22);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{
+      margin:0;
+      padding:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      min-height:100%;
+    }
+
+    .wrap{
+      max-width:860px;
+      margin:0 auto;
+      padding:16px;
+    }
+
+    .box{
+      background:rgba(21,26,34,.96);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:16px 18px;
+      margin-bottom:12px;
+    }
+
+    h1{
+      margin:0;
+      font-size:22px;
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+      margin-top:6px;
+    }
+
+    .content{
+      padding:16px;
+      display:grid;
+      gap:12px;
+    }
+
+    .card{
+      background:var(--panel2);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+    }
+
+    .row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+    }
+
+    .title{
+      margin:0;
+      font-size:15px;
+      font-weight:700;
+    }
+
+    .desc{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+    }
+
+    .switch{
+      position:relative;
+      width:56px;
+      height:32px;
+      flex:0 0 auto;
+    }
+
+    .switch input{
+      opacity:0;
+      width:0;
+      height:0;
+    }
+
+    .slider{
+      position:absolute;
+      inset:0;
+      background:#39445a;
+      border-radius:999px;
+      transition:.2s ease;
+      cursor:pointer;
+      border:1px solid var(--line);
+    }
+
+    .slider:before{
+      content:"";
+      position:absolute;
+      width:24px;
+      height:24px;
+      left:3px;
+      top:3px;
+      border-radius:999px;
+      background:#fff;
+      transition:.2s ease;
+    }
+
+    input:checked + .slider{
+      background:linear-gradient(180deg,#3f5f52,#2f483e);
+      border-color:rgba(52,211,153,.45);
+    }
+
+    input:checked + .slider:before{
+      transform:translateX(24px);
+    }
+
+    .footer{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      padding:0 16px 16px;
+    }
+
+    button,a{
+      border:1px solid var(--line);
+      background:var(--panel2);
+      color:var(--text);
+      border-radius:14px;
+      padding:12px 14px;
+      cursor:pointer;
+      text-decoration:none;
+      transition:.18s ease;
+      font-size:14px;
+    }
+
+    button:hover,a:hover{
+      border-color:var(--gold);
+      transform:translateY(-1px);
+    }
+
+    .primary{
+      background:linear-gradient(180deg,#47376d,#35284e);
+    }
+
+    .ghost{
+      background:linear-gradient(180deg,#242b38,#1c2230);
+    }
+
+    .toast{
+      position:fixed;
+      left:16px;
+      right:16px;
+      bottom:16px;
+      background:rgba(52,211,153,.14);
+      border:1px solid rgba(52,211,153,.45);
+      color:#baf5de;
+      border-radius:14px;
+      padding:12px 14px;
+      display:none;
+      z-index:50;
+    }
+
+    .toast.show{
+      display:block;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="box header">
+      <div>
+        <h1>Settings</h1>
+        <div class="muted">
+          ここで有効化した内容は、<strong>ChatGPTに議事録を依頼</strong>したときのプロンプトに反映されます。
+        </div>
+      </div>
+      <a href="./index.html" class="ghost">← Back</a>
+    </section>
+
+    <section class="box content">
+      <div class="card">
+        <div class="row">
+          <div>
+            <div class="title">Speaker Diarization 指示</div>
+            <div class="desc">
+              話者ごとに発言を整理するよう、ChatGPTへの依頼文に追加します。<br>
+              ただし、この静的版では本物の音声埋め込み分離は実行しません。
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="promptSpeakerDiarization">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div>
+            <div class="title">自己紹介 / 呼称抽出 指示</div>
+            <div class="desc">
+              発話内の自己紹介、呼びかけ、人名、役職、組織名を拾って、話者や関係者に反映するよう依頼します。
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="promptNameExtraction">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div>
+            <div class="title">後段AI整理 指示</div>
+            <div class="desc">
+              重複、言い淀み、断片表現を整え、読みやすい議事録に仕上げるよう依頼します。
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="promptPostAiCleanup">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      <button id="saveBtn" class="primary">保存</button>
+      <a href="./index.html" class="ghost">戻る</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_SETTINGS_KEY = 'voicescribe_settings_v1';
+
+    const DEFAULT_SETTINGS = {
+      promptSpeakerDiarization: true,
+      promptNameExtraction: true,
+      promptPostAiCleanup: true
+    };
+
+    function $(id){
+      return document.getElementById(id);
+    }
+
+    function toast(msg){
+      const el = $('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        el.classList.remove('show');
+      }, 2200);
+    }
+
+    function loadSettings(){
+      try{
+        const raw = localStorage.getItem(STORAGE_SETTINGS_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        const data = { ...DEFAULT_SETTINGS, ...parsed };
+
+        $('promptSpeakerDiarization').checked = !!data.promptSpeakerDiarization;
+        $('promptNameExtraction').checked = !!data.promptNameExtraction;
+        $('promptPostAiCleanup').checked = !!data.promptPostAiCleanup;
+      }catch(_){
+        $('promptSpeakerDiarization').checked = true;
+        $('promptNameExtraction').checked = true;
+        $('promptPostAiCleanup').checked = true;
+      }
+    }
+
+    function saveSettings(){
+      const data = {
+        promptSpeakerDiarization: $('promptSpeakerDiarization').checked,
+        promptNameExtraction: $('promptNameExtraction').checked,
+        promptPostAiCleanup: $('promptPostAiCleanup').checked
+      };
+      localStorage.setItem(STORAGE_SETTINGS_KEY, JSON.stringify(data));
+      toast('保存しました');
+    }
+
+    $('saveBtn').addEventListener('click', saveSettings);
+    loadSettings();
+  </script>
+</body>
+</html>
