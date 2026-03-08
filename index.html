@@ -483,71 +483,6 @@
       color: #a2d4e8; word-break: break-word;
     }
 
-    /* ── Modal ── */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(7,14,29,.87);
-      backdrop-filter: blur(14px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 200; padding: 20px;
-      animation: fdi .22s ease;
-    }
-
-    .modal-overlay.hidden { display: none; }
-    @keyframes fdi { from{opacity:0} to{opacity:1} }
-
-    .modal {
-      background: var(--n700); border: 1px solid var(--glh);
-      border-radius: 20px; padding: 32px 28px;
-      max-width: 380px; width: 100%;
-      box-shadow: 0 40px 80px rgba(0,0,0,.6);
-      animation: slu .25s ease;
-      position: relative; overflow: hidden; text-align: center;
-    }
-
-    .modal::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, var(--g500), transparent);
-    }
-
-    @keyframes slu { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-
-    .modal-icon { font-size: 36px; display: block; margin-bottom: 14px; }
-
-    .modal-title {
-      font-family: var(--fs); font-size: 22px; font-weight: 700;
-      color: var(--g400); margin-bottom: 10px; letter-spacing: .04em;
-    }
-
-    .modal-body {
-      font-size: 13px; color: var(--tx2);
-      line-height: 1.85; margin-bottom: 24px;
-    }
-
-    .modal-body strong { color: var(--tx); }
-
-    .modal-acts { display: flex; flex-direction: column; gap: 10px; }
-
-    .m-open {
-      width: 100%; height: 50px; border-radius: 12px;
-      font-family: var(--fs); font-size: 17px; font-weight: 700;
-      letter-spacing: .06em; cursor: pointer;
-      border: 1px solid var(--glh);
-      background: linear-gradient(160deg,#221a0e,#160f07);
-      color: var(--g400); transition: all .18s;
-    }
-
-    .m-open:hover { box-shadow: 0 0 24px var(--gg); transform: translateY(-1px); }
-
-    .m-close {
-      width: 100%; height: 40px; border-radius: 10px;
-      font-family: var(--fm); font-size: 12px; cursor: pointer;
-      border: 1px solid var(--bd); background: transparent;
-      color: var(--mu); transition: all .18s;
-    }
-
-    .m-close:hover { color: var(--tx2); border-color: var(--gl); }
 
     /* ── Toast ── */
     .toast {
@@ -635,7 +570,6 @@
 
       .live-grid { grid-template-columns: 1fr; gap: 8px; }
 
-      .modal { padding: 26px 20px; }
     }
 
     @media (max-width: 360px) {
@@ -1080,18 +1014,8 @@ ${getTxt()||'（文字起こしなし）'}
   async function askGPT(){
     if(!entries.length){ toast('まず録音してください。'); return; }
     const prompt = buildPrompt();
-    const encoded = encodeURIComponent(prompt);
-    const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const and=/Android/i.test(navigator.userAgent);
-    if(ios){
-      window.location.href='chatgpt://openai.com/gpt-4?prompt='+encoded;
-    }else if(and){
-      try{
-        window.location.href='intent://openai.com/gpt-4?prompt='+encoded+'#Intent;scheme=chatgpt;package=com.openai.chatgpt;end';
-      }catch(_){ toast('ChatGPTアプリをインストールしてください。'); }
-    }else{
-      toast('このボタンはChatGPTアプリ専用です。アプリからご利用ください。');
-    }
+    const url = 'https://chatgpt.com/?prompt=' + encodeURIComponent(prompt);
+    window.open(url, '_blank');
   }
 
   /* recording */
