@@ -785,22 +785,6 @@
   </main>
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay hidden" id="gptModal">
-  <div class="modal">
-    <span class="modal-icon">📋</span>
-    <div class="modal-title">コピー完了！</div>
-    <div class="modal-body">
-      文字起こし全文と議事録依頼の<br>
-      プロンプトをコピーしました。<br><br>
-      <strong>ChatGPTを開いて、<br>入力欄に貼り付けて送信</strong>してください。
-    </div>
-    <div class="modal-acts">
-      <button class="m-open" id="modalOpenGPT">ChatGPTを開く →</button>
-      <button class="m-close" id="modalClose">閉じる</button>
-    </div>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
@@ -1095,30 +1079,20 @@ ${getTxt()||'（文字起こしなし）'}
   /* GPT */
   async function askGPT(){
     if(!entries.length){ toast('まず録音してください。'); return; }
-    try{ await navigator.clipboard.writeText(buildPrompt()); }
-    catch(_){ toast('クリップボードへのコピーに失敗しました。'); return; }
-    $('gptModal').classList.remove('hidden');
-  }
-
-  function openGPT(){
+    const prompt = buildPrompt();
+    const encoded = encodeURIComponent(prompt);
     const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
     const and=/Android/i.test(navigator.userAgent);
     if(ios){
-      window.location.href='chatgpt://';
-      setTimeout(()=>window.open('https://chatgpt.com/','_blank','noopener,noreferrer'),1200);
+      window.location.href='chatgpt://openai.com/gpt-4?prompt='+encoded;
     }else if(and){
       try{
-        window.location.href='intent://chatgpt.com/#Intent;scheme=https;package=com.openai.chatgpt;end';
-        setTimeout(()=>window.open('https://chatgpt.com/','_blank','noopener,noreferrer'),1200);
-      }catch(_){ window.open('https://chatgpt.com/','_blank','noopener,noreferrer'); }
+        window.location.href='intent://openai.com/gpt-4?prompt='+encoded+'#Intent;scheme=chatgpt;package=com.openai.chatgpt;end';
+      }catch(_){ toast('ChatGPTアプリをインストールしてください。'); }
     }else{
-      window.open('https://chatgpt.com/','_blank','noopener,noreferrer');
+      toast('このボタンはChatGPTアプリ専用です。アプリからご利用ください。');
     }
-    $('gptModal').classList.add('hidden');
   }
-
-  $('modalOpenGPT').addEventListener('click', openGPT);
-  $('modalClose').addEventListener('click', ()=>$('gptModal').classList.add('hidden'));
 
   /* recording */
   async function startRec(){
@@ -1177,7 +1151,16 @@ ${getTxt()||'（文字起こしなし）'}
   $('copyBtn').addEventListener('click', copyAll);
   $('saveAudioBtn').addEventListener('click', saveAudio);
   $('clearBtn').addEventListener('click', clearAll);
-  $('scrollBottomBtn').addEventListener('click', ()=>$('log').scrollTop=$('log').scrollHeight);
+  $('scrollBottomBtn').addEventListener('click', ()=>{
+    const log=$('log');
+    // デスクトップ: log要素自体がスクロール
+    if(log.scrollHeight > log.clientHeight){
+      log.scrollTop = log.scrollHeight;
+    } else {
+      // モバイル: ページ全体がスクロール
+      window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+    }
+  });
 
   window.addEventListener('beforeunload',()=>{
     save();
