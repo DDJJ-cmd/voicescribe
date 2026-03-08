@@ -160,6 +160,30 @@
     }
 
     /* ════════════════════════════════════════
+       LANG TOGGLE
+    ════════════════════════════════════════ */
+    .lang-toggle {
+      display: flex; width: 100%;
+      border: 1px solid var(--gl);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .lang-toggle button {
+      flex: 1; padding: 8px 0;
+      background: transparent;
+      border: none; cursor: pointer;
+      font-family: var(--fm); font-size: 11px;
+      letter-spacing: .1em; color: var(--mu);
+      transition: background .2s, color .2s;
+    }
+    .lang-toggle button.active {
+      background: var(--gg);
+      color: var(--g400);
+    }
+    .lang-toggle button:first-child { border-right: 1px solid var(--gl); }
+
+    /* ════════════════════════════════════════
        MIC BUTTON — 四角枠 + 大きな円 + SVGマイク
     ════════════════════════════════════════ */
     .mic-wrap {
@@ -665,6 +689,12 @@
       <div class="sb-lbl">Recording</div>
       <div class="rec-section">
 
+        <!-- 言語トグル -->
+        <div class="lang-toggle" id="langToggle">
+          <button id="langJA" onclick="setLang('ja-JP')">🇯🇵 日本語</button>
+          <button id="langEN" class="active" onclick="setLang('en-US')">🇺🇸 English</button>
+        </div>
+
         <!-- ① 大きなマイクボタン（四角枠 + ゴールド円 + SVGマイク） -->
         <div class="mic-wrap" id="startBtn" role="button" tabindex="0" aria-label="録音開始">
           <div class="mic-circle">
@@ -957,12 +987,20 @@
     }, PAUSE_MS);
   }
 
+  /* lang toggle */
+  let recLang = 'en-US';
+  function setLang(l){
+    recLang = l;
+    $('langJA').classList.toggle('active', l==='ja-JP');
+    $('langEN').classList.toggle('active', l==='en-US');
+  }
+
   /* recognition */
   function buildRec(){
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR) return null;
     const r=new SR(), mid=++recId;
-    r.lang='ja-JP'; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
+    r.lang=recLang; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
     r.onresult=async ev=>{
       if(mid!==recId) return;
       let interim='', fin=false;
