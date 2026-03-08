@@ -3,1157 +3,1036 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>VoiceScribe AI</title>
+  <title>VoiceScribe AI — HMJ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
-    :root{
-      --bg:#0d1016;
-      --panel:#151a22;
-      --panel2:#1c2230;
-      --line:#2d3647;
-      --text:#f3f6fb;
-      --muted:#97a3b8;
-      --gold:#c9a96e;
-      --blue:#6aa8ff;
-      --green:#34d399;
-      --red:#ef7275;
-      --purple:#aa8dff;
-      --shadow:0 10px 28px rgba(0,0,0,.22);
-      --radius:18px;
-    }
-
-    *{ box-sizing:border-box; }
-    html,body{
-      margin:0;
-      padding:0;
-      background:var(--bg);
-      color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    }
-
-    body{ min-height:100dvh; }
-
-    .app{
-      max-width:1280px;
-      margin:0 auto;
-      padding:12px;
-    }
-
-    .shell{
-      display:grid;
-      grid-template-columns: 320px 1fr;
-      gap:12px;
-      min-height:calc(100dvh - 24px);
-    }
-
-    .panel, .box{
-      background:rgba(21,26,34,.96);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-    }
-
-    .panel{
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-    }
-
-    .main{
-      display:grid;
-      grid-template-rows:auto auto 1fr;
-      gap:12px;
-      min-height:0;
-    }
-
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:16px 18px;
-    }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      min-width:0;
-    }
-
-    .brandDot{
-      width:12px;
-      height:12px;
-      border-radius:999px;
-      background:#5a6678;
-      flex:0 0 auto;
-    }
-
-    .brandDot.on{
-      background:var(--green);
-      box-shadow:0 0 14px rgba(52,211,153,.85);
-    }
-
-    .brandText{
-      min-width:0;
-    }
-
-    .brandText h1{
-      margin:0;
-      font-size:20px;
-      letter-spacing:.03em;
-    }
-
-    .brandText p{
-      margin:4px 0 0;
-      color:var(--muted);
-      font-size:12px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .topActions{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:var(--panel2);
-      color:var(--muted);
-      font-size:12px;
-      white-space:nowrap;
-    }
-
-    .gearBtn, button{
-      border:1px solid var(--line);
-      background:var(--panel2);
-      color:var(--text);
-      border-radius:14px;
-      cursor:pointer;
-      transition:.18s ease;
-    }
-
-    .gearBtn{
-      width:44px;
-      height:44px;
-      font-size:18px;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    button:hover, .gearBtn:hover{
-      border-color:var(--gold);
-      transform:translateY(-1px);
-    }
-
-    .sectionTitle{
-      margin:0;
-      font-size:12px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:var(--gold);
-    }
-
-    .controls{
-      display:grid;
-      gap:10px;
-    }
-
-    .primary{
-      background:linear-gradient(180deg,#27415f,#1f3147);
-    }
-
-    .danger{
-      background:linear-gradient(180deg,#5a2527,#421b1c);
-    }
-
-    .accent{
-      background:linear-gradient(180deg,#47376d,#35284e);
-    }
-
-    .ghost{
-      background:linear-gradient(180deg,#242b38,#1c2230);
-    }
-
-    .mainBtn{
-      width:100%;
-      padding:15px 14px;
-      font-size:15px;
-      font-weight:700;
-      letter-spacing:.02em;
-    }
-
-    .subBtns{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:8px;
-    }
-
-    .subBtn{
-      width:100%;
-      padding:12px 14px;
-      font-size:14px;
-    }
-
-    .micRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-top:2px;
-    }
-
-    .mini{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.6;
-    }
-
-    .wave{
-      display:flex;
-      gap:3px;
-      align-items:flex-end;
-      height:22px;
-    }
-
-    .bar{
-      width:4px;
-      height:6px;
-      border-radius:999px;
-      background:var(--gold);
-      opacity:.35;
-    }
-
-    .wave.on .bar{
-      animation:wave .9s ease-in-out infinite;
-      opacity:1;
-    }
-
-    .wave .bar:nth-child(1){animation-delay:0s}
-    .wave .bar:nth-child(2){animation-delay:.1s}
-    .wave .bar:nth-child(3){animation-delay:.2s}
-    .wave .bar:nth-child(4){animation-delay:.1s}
-    .wave .bar:nth-child(5){animation-delay:0s}
-
-    .dashboard{
-      padding:16px;
-    }
-
-    .stats{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:10px;
-    }
-
-    .stat{
-      background:var(--panel2);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-      min-height:92px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-    }
-
-    .stat .value{
-      font-size:22px;
-      font-weight:800;
-      line-height:1.2;
-      word-break:break-word;
-    }
-
-    .stat .label{
-      margin-top:5px;
-      font-size:11px;
-      color:var(--muted);
-    }
-
-    .live{
-      padding:16px;
-    }
-
-    .liveGrid{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:10px;
-      margin-top:10px;
-    }
-
-    .liveCard{
-      background:#0b0e14;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      min-height:120px;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .liveCard strong{
-      display:block;
-      margin-bottom:8px;
-      color:var(--gold);
-      font-size:12px;
-      letter-spacing:.04em;
-    }
-
-    .liveText{
-      white-space:pre-wrap;
-      line-height:1.7;
-      color:#c8d1df;
-      font-size:14px;
-      flex:1;
-    }
-
-    .liveText.translate{
-      color:#bcd7ff;
-    }
-
-    .transcript{
-      padding:16px;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .transcriptTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-
-    .toolbar{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
-    .toolbar button{
-      width:auto;
-      padding:10px 13px;
-      font-size:13px;
-    }
-
-    .log{
-      flex:1;
-      min-height:320px;
-      background:#0b0e14;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-      overflow:auto;
-    }
-
-    .placeholder{
-      padding:56px 20px;
-      text-align:center;
-      color:var(--muted);
-    }
-
-    .entry{
-      padding:12px 0;
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-
-    .entry:last-child{
-      border-bottom:0;
-    }
-
-    .meta{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-bottom:6px;
-      font-size:11px;
-      color:var(--gold);
-    }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      color:var(--muted);
-    }
-
-    .lng-en{
-      color:#bcd7ff;
-      border-color:rgba(106,168,255,.32);
-    }
-
-    .lng-ja{
-      color:#ffe1ad;
-      border-color:rgba(201,169,110,.34);
-    }
-
-    .orig{
-      white-space:pre-wrap;
-      line-height:1.75;
-      font-size:15px;
-    }
-
-    .tran{
-      margin-top:7px;
-      padding:10px 12px;
-      border-left:3px solid var(--blue);
-      background:rgba(106,168,255,.08);
-      border-radius:0 10px 10px 0;
-      color:#bcd7ff;
-      white-space:pre-wrap;
-      line-height:1.7;
-    }
-
-    /* ── ChatGPT コピー通知モーダル ── */
-    .modal-overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.72);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:60;
-      padding:16px;
-      backdrop-filter:blur(6px);
-    }
-
-    .modal-overlay.hidden{
-      display:none;
-    }
-
-    .modal-box{
-      background:#1c2230;
-      border:1px solid var(--gold);
-      border-radius:20px;
-      padding:24px 20px;
-      max-width:420px;
-      width:100%;
-      box-shadow:0 20px 48px rgba(0,0,0,.5);
-    }
-
-    .modal-box h2{
-      margin:0 0 10px;
-      font-size:18px;
-      color:var(--gold);
-    }
-
-    .modal-box p{
-      margin:0 0 18px;
-      color:#c8d1df;
-      font-size:14px;
-      line-height:1.75;
-    }
+    :root {
+      --n900: #070e1d;
+      --n800: #0c1628;
+      --n700: #0f1e3a;
+      --n600: #152544;
+      --n500: #1d3260;
+
+      --g400: #e8c97a;
+      --g500: #c9a258;
+      --gg:   rgba(201,162,88,.18);
+      --gl:   rgba(201,162,88,.25);
+      --glh:  rgba(201,162,88,.5);
+
+      --tx:   #edf1f8;
+      --tx2:  #b8c3d8;
+      --mu:   #617390;
+
+      --gr:   #3ecf8e;
+      --grl:  rgba(62,207,142,.32);
+      --red:  #e05c63;
+      --rl:   rgba(224,92,99,.32);
+      --cy:   #5ab5d0;
+      --cyd:  rgba(90,181,208,.1);
 
-    .modal-box .step{
-      background:#0b0e14;
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:12px 14px;
-      margin-bottom:10px;
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.7;
+      --bd: rgba(255,255,255,.07);
+      --r:  14px;
+      --fs: 'Cormorant Garamond', serif;
+      --fm: 'DM Mono', monospace;
     }
 
-    .modal-box .step strong{
-      color:var(--text);
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
-    .modal-actions{
-      display:flex;
-      gap:10px;
-      margin-top:20px;
+    body {
+      min-height: 100dvh;
+      background: var(--n800);
+      color: var(--tx);
+      font-family: var(--fm);
+      font-size: 14px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
-    .modal-actions button{
-      flex:1;
-      padding:13px 10px;
-      font-size:14px;
-      font-weight:700;
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        -45deg, transparent, transparent 40px,
+        rgba(255,255,255,.007) 40px, rgba(255,255,255,.007) 41px
+      );
+      pointer-events: none; z-index: 0;
     }
 
-    .toast{
-      position:fixed;
-      left:16px;
-      right:16px;
-      bottom:16px;
-      background:rgba(239,114,117,.14);
-      border:1px solid var(--red);
-      color:#ffc0c1;
-      border-radius:14px;
-      padding:12px 14px;
-      display:none;
-      z-index:50;
-      backdrop-filter:blur(8px);
+    body::after {
+      content: '';
+      position: fixed; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent 0%, var(--g500) 30%, var(--g400) 50%, var(--g500) 70%, transparent 100%);
+      z-index: 100;
     }
 
-    .toast.show{
-      display:block;
+    /* ── Layout ── */
+    .app {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      grid-template-rows: 68px 1fr;
+      height: 100dvh;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: var(--n900);
+      border-bottom: 1px solid var(--gl);
+      gap: 16px;
     }
 
-    @keyframes wave{
-      0%,100%{height:6px}
-      50%{height:20px}
+    .hmj-brand { display: flex; align-items: center; gap: 13px; flex-shrink: 0; }
+    .shield { width: 38px; height: 38px; flex-shrink: 0; }
+    .brand-words { display: flex; flex-direction: column; gap: 1px; }
+
+    .brand-org {
+      font-family: var(--fm); font-size: 8.5px;
+      letter-spacing: .22em; color: var(--g500);
+      text-transform: uppercase; line-height: 1;
     }
 
-    @media (max-width:1040px){
-      .shell{
-        grid-template-columns:1fr;
+    .brand-product {
+      font-family: var(--fs); font-size: 20px; font-weight: 600;
+      letter-spacing: .05em; color: var(--tx); line-height: 1;
+    }
+
+    .brand-product em { font-style: normal; color: var(--g400); }
+
+    .topbar-mid { flex: 1; display: flex; justify-content: center; }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 16px; border-radius: 999px;
+      border: 1px solid var(--bd); background: var(--n700);
+      font-size: 10px; letter-spacing: .14em;
+      color: var(--mu); text-transform: uppercase;
+      transition: border-color .3s, color .3s; white-space: nowrap;
+    }
+
+    .status-pill.on { border-color: var(--grl); color: var(--gr); }
+
+    .sdot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--mu); flex-shrink: 0;
+      transition: background .3s, box-shadow .3s;
+    }
+
+    .sdot.on {
+      background: var(--gr); box-shadow: 0 0 8px var(--gr);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .topbar-right { display: flex; align-items: center; flex-shrink: 0; }
+
+    .clock {
+      font-size: 13px; color: var(--mu);
+      font-variant-numeric: tabular-nums; letter-spacing: .05em;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      background: var(--n900);
+      border-right: 1px solid var(--gl);
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--n500); border-radius: 4px; }
+
+    .sb { padding: 20px 18px; border-bottom: 1px solid var(--bd); }
+    .sb:last-child { border-bottom: none; flex: 1; }
+
+    .sb-lbl {
+      font-size: 9px; letter-spacing: .22em;
+      text-transform: uppercase; color: var(--g500); margin-bottom: 13px;
+    }
+
+    /* ════════════════════════════════════════
+       MIC BUTTON — 四角枠 + 大きな円 + SVGマイク
+    ════════════════════════════════════════ */
+    .mic-wrap {
+      width: 100%;
+      /* 四角い枠 */
+      border: 1px solid var(--gl);
+      border-radius: var(--r);
+      background: linear-gradient(160deg, #0d1829, #090f1d);
+      padding: 20px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: border-color .25s, box-shadow .25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 四角枠のホバー */
+    .mic-wrap:hover:not(.disabled) {
+      border-color: var(--glh);
+      box-shadow: 0 0 32px rgba(201,162,88,.1);
+    }
+
+    .mic-wrap.disabled { opacity: .3; cursor: not-allowed; }
+
+    /* 四角枠の内側上部グロー */
+    .mic-wrap::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 50%;
+      background: radial-gradient(ellipse at 50% 0%, rgba(201,162,88,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* 円本体 — フロストガラス */
+    .mic-circle {
+      width: 96px; height: 96px;
+      border-radius: 50%;
+      background: linear-gradient(
+        145deg,
+        rgba(255,255,255,.13) 0%,
+        rgba(200,215,240,.06) 40%,
+        rgba(15,30,58,.4) 100%
+      );
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(232,201,122,.55);
+      box-shadow:
+        0 0 0 5px rgba(201,162,88,.09),
+        0 0 0 11px rgba(201,162,88,.04),
+        0 8px 32px rgba(201,162,88,.18),
+        inset 0 1.5px 0 rgba(255,255,255,.28),
+        inset 0 -1px 0 rgba(0,0,0,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .28s;
+      position: relative;
+    }
+
+    .mic-wrap.recording .mic-circle {
+      background: linear-gradient(
+        145deg,
+        rgba(255,100,110,.22) 0%,
+        rgba(224,92,99,.1) 40%,
+        rgba(30,8,10,.45) 100%
+      );
+      border-color: rgba(224,92,99,.7);
+      box-shadow:
+        0 0 0 5px rgba(224,92,99,.15),
+        0 0 0 11px rgba(224,92,99,.06),
+        0 8px 32px rgba(224,92,99,.3),
+        inset 0 1.5px 0 rgba(255,150,150,.25),
+        inset 0 -1px 0 rgba(0,0,0,.25);
+      animation: mic-pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes mic-pulse {
+      0%, 100% {
+        box-shadow:
+          0 0 0 5px rgba(224,92,99,.15),
+          0 0 0 11px rgba(224,92,99,.06),
+          0 8px 32px rgba(224,92,99,.28),
+          inset 0 1.5px 0 rgba(255,150,150,.25),
+          inset 0 -1px 0 rgba(0,0,0,.25);
+      }
+      50% {
+        box-shadow:
+          0 0 0 9px rgba(224,92,99,.2),
+          0 0 0 18px rgba(224,92,99,.06),
+          0 8px 44px rgba(224,92,99,.48),
+          inset 0 1.5px 0 rgba(255,150,150,.25),
+          inset 0 -1px 0 rgba(0,0,0,.25);
       }
     }
 
-    @media (max-width:780px){
-      .liveGrid{
-        grid-template-columns:1fr;
+    .mic-wrap:hover:not(.disabled) .mic-circle {
+      transform: scale(1.05);
+      border-color: rgba(232,201,122,.85);
+      box-shadow:
+        0 0 0 6px rgba(201,162,88,.14),
+        0 0 0 13px rgba(201,162,88,.05),
+        0 10px 40px rgba(201,162,88,.25),
+        inset 0 1.5px 0 rgba(255,255,255,.35),
+        inset 0 -1px 0 rgba(0,0,0,.25);
+    }
+
+    .mic-icon {
+      width: 44px; height: 44px;
+      filter: drop-shadow(0 1px 4px rgba(0,0,0,.5));
+    }
+
+    /* ラベル */
+    .mic-label {
+      font-family: var(--fs);
+      font-size: 15px; font-weight: 600;
+      letter-spacing: .14em;
+      color: var(--g400);
+      text-transform: uppercase;
+      transition: color .25s;
+    }
+
+    .mic-wrap.recording .mic-label {
+      color: var(--red);
+    }
+
+    /* ── STOP ボタン（全幅）── */
+    .stop-btn {
+      width: 100%; height: 46px;
+      border-radius: var(--r);
+      border: 1px solid var(--rl);
+      background: linear-gradient(160deg,#2a1215,#1a0b0d);
+      color: var(--red);
+      font-family: var(--fs);
+      font-size: 15px; font-weight: 600;
+      letter-spacing: .08em;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all .2s;
+    }
+
+    .stop-btn:hover:not(:disabled) {
+      border-color: var(--red);
+      box-shadow: 0 0 20px rgba(224,92,99,.13);
+      transform: translateY(-1px);
+    }
+
+    .stop-btn:disabled { opacity: .25; cursor: not-allowed; }
+
+    /* ── GPT ボタン ── */
+    .gpt-btn {
+      width: 100%; height: 46px;
+      border-radius: var(--r);
+      border: 1px solid var(--gl);
+      background: linear-gradient(160deg,#221a0e,#160f07);
+      color: var(--g500);
+      font-family: var(--fs);
+      font-size: 15px; font-weight: 600;
+      letter-spacing: .07em;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all .2s;
+    }
+
+    .gpt-btn:hover {
+      border-color: var(--g500);
+      box-shadow: 0 0 22px var(--gg);
+      transform: translateY(-1px);
+    }
+
+    .btn-stack { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── サブボタン ── */
+    .sub-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+    .sub-btn {
+      padding: 10px 6px;
+      border-radius: 10px;
+      border: 1px solid var(--bd);
+      background: var(--n700);
+      color: var(--mu);
+      font-family: var(--fm); font-size: 11px;
+      letter-spacing: .03em;
+      cursor: pointer; text-align: center;
+      transition: all .18s;
+    }
+
+    .sub-btn:hover { border-color: var(--glh); color: var(--g400); background: var(--n600); }
+    .sub-btn.wide { grid-column: 1 / -1; }
+
+    /* ── Status（経過時間・言語比率）── */
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-wide { grid-column: 1 / -1; }
+
+    .stat-card {
+      background: var(--n700);
+      border: 1px solid var(--bd);
+      border-radius: 12px;
+      padding: 14px 12px;
+    }
+
+    .sv {
+      font-family: var(--fs);
+      font-size: 24px; font-weight: 700;
+      color: var(--g400); line-height: 1; margin-bottom: 5px;
+    }
+
+    .sl { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--mu); }
+
+    /* ── Main ── */
+    .main {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+      background: var(--n800);
+    }
+
+    .live-area {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--bd);
+      background: var(--n900);
+    }
+
+    .area-lbl {
+      font-size: 9px; letter-spacing: .22em;
+      text-transform: uppercase; color: var(--g500); margin-bottom: 11px;
+    }
+
+    .live-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .lc {
+      background: var(--n800); border: 1px solid var(--bd);
+      border-radius: 12px; padding: 12px 14px; min-height: 72px;
+    }
+
+    .lc-lbl { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--mu); margin-bottom: 7px; }
+    .lc-txt { font-size: 13px; line-height: 1.65; color: var(--tx2); word-break: break-word; }
+    .lc-txt.gold { color: var(--g400); }
+
+    .tx-area { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+
+    .tx-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px; border-bottom: 1px solid var(--bd); flex-shrink: 0;
+    }
+
+    .scroll-btn {
+      padding: 6px 14px; border-radius: 8px;
+      border: 1px solid var(--bd); background: var(--n700);
+      color: var(--mu); font-family: var(--fm); font-size: 11px;
+      cursor: pointer; transition: all .18s;
+    }
+
+    .scroll-btn:hover { border-color: var(--glh); color: var(--g400); }
+
+    .log { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .log::-webkit-scrollbar { width: 5px; }
+    .log::-webkit-scrollbar-thumb { background: var(--n500); border-radius: 4px; }
+
+    .placeholder {
+      padding: 64px 20px; text-align: center;
+      color: var(--mu); font-size: 13px; line-height: 1.9;
+    }
+
+    .ph-ico { font-size: 28px; opacity: .35; display: block; margin-bottom: 12px; }
+
+    .entry {
+      padding: 14px 0; border-bottom: 1px solid var(--bd);
+      animation: fadeUp .28s ease both;
+    }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:translateY(0)} }
+
+    .entry:last-child { border-bottom: none; }
+
+    .e-meta { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; flex-wrap: wrap; }
+    .e-time { font-size: 10px; color: var(--mu); font-variant-numeric: tabular-nums; }
+
+    .tag {
+      display: inline-flex; align-items: center;
+      padding: 2px 9px; border-radius: 999px;
+      font-size: 10px; letter-spacing: .05em;
+    }
+
+    .tag-spk { border: 1px solid var(--bd); color: var(--mu); background: var(--n700); }
+    .tag-en  { border: 1px solid rgba(90,181,208,.3); color: var(--cy); background: var(--cyd); }
+    .tag-ja  { border: 1px solid var(--gl); color: var(--g400); background: var(--gg); }
+
+    .e-orig { font-size: 14px; line-height: 1.8; color: var(--tx); word-break: break-word; }
+
+    .e-tran {
+      margin-top: 8px; padding: 9px 13px;
+      border-left: 2px solid var(--cy); background: var(--cyd);
+      border-radius: 0 8px 8px 0;
+      font-size: 13px; line-height: 1.72;
+      color: #a2d4e8; word-break: break-word;
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(7,14,29,.87);
+      backdrop-filter: blur(14px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; padding: 20px;
+      animation: fdi .22s ease;
+    }
+
+    .modal-overlay.hidden { display: none; }
+    @keyframes fdi { from{opacity:0} to{opacity:1} }
+
+    .modal {
+      background: var(--n700); border: 1px solid var(--glh);
+      border-radius: 20px; padding: 32px 28px;
+      max-width: 380px; width: 100%;
+      box-shadow: 0 40px 80px rgba(0,0,0,.6);
+      animation: slu .25s ease;
+      position: relative; overflow: hidden; text-align: center;
+    }
+
+    .modal::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--g500), transparent);
+    }
+
+    @keyframes slu { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    .modal-icon { font-size: 36px; display: block; margin-bottom: 14px; }
+
+    .modal-title {
+      font-family: var(--fs); font-size: 22px; font-weight: 700;
+      color: var(--g400); margin-bottom: 10px; letter-spacing: .04em;
+    }
+
+    .modal-body {
+      font-size: 13px; color: var(--tx2);
+      line-height: 1.85; margin-bottom: 24px;
+    }
+
+    .modal-body strong { color: var(--tx); }
+
+    .modal-acts { display: flex; flex-direction: column; gap: 10px; }
+
+    .m-open {
+      width: 100%; height: 50px; border-radius: 12px;
+      font-family: var(--fs); font-size: 17px; font-weight: 700;
+      letter-spacing: .06em; cursor: pointer;
+      border: 1px solid var(--glh);
+      background: linear-gradient(160deg,#221a0e,#160f07);
+      color: var(--g400); transition: all .18s;
+    }
+
+    .m-open:hover { box-shadow: 0 0 24px var(--gg); transform: translateY(-1px); }
+
+    .m-close {
+      width: 100%; height: 40px; border-radius: 10px;
+      font-family: var(--fm); font-size: 12px; cursor: pointer;
+      border: 1px solid var(--bd); background: transparent;
+      color: var(--mu); transition: all .18s;
+    }
+
+    .m-close:hover { color: var(--tx2); border-color: var(--gl); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; left: 50%; bottom: 28px;
+      transform: translateX(-50%) translateY(16px);
+      background: var(--n700); border: 1px solid var(--glh);
+      color: var(--g400); border-radius: 999px;
+      padding: 10px 22px; font-size: 12px; white-space: nowrap;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s, transform .25s;
+      z-index: 300;
+      box-shadow: 0 8px 28px rgba(0,0,0,.45);
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 60px auto 1fr;
+        height: auto; min-height: 100dvh;
       }
-      .stats{
-        grid-template-columns:1fr;
+
+      .topbar { padding: 0 16px; }
+      .topbar-mid { display: none; }
+
+      .sidebar {
+        grid-row: 2; border-right: none;
+        border-bottom: 1px solid var(--gl);
+        padding: 16px;
       }
-      .topbar{
-        padding:14px;
+
+      .sb { padding: 0; border: none; margin-bottom: 12px; }
+      .sb:last-child { margin-bottom: 0; }
+
+      /* タブレット：マイクボタンを左、他を右に */
+      .rec-section {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        align-items: start;
       }
+
+      .mic-wrap {
+        width: 130px;
+        padding: 14px 12px 12px;
+      }
+
+      .mic-circle { width: 72px; height: 72px; }
+      .mic-icon   { width: 32px; height: 32px; }
+      .mic-label  { font-size: 13px; }
+
+      .right-btns { display: flex; flex-direction: column; gap: 8px; }
+
+      .stop-btn, .gpt-btn { height: 44px; font-size: 14px; }
+
+      .sub-row { grid-template-columns: repeat(3,1fr); }
+      .sub-btn.wide { grid-column: auto; }
+
+      .stat-grid { grid-template-columns: repeat(3,1fr); }
+      .stat-wide { grid-column: auto; }
+      .sv { font-size: 18px; }
+
+      .main { grid-row: 3; }
+    }
+
+    @media (max-width: 580px) {
+      .topbar { padding: 0 14px; gap: 10px; }
+      .brand-org { font-size: 7.5px; letter-spacing: .16em; }
+      .brand-product { font-size: 17px; }
+      .shield { width: 32px; height: 32px; }
+
+      .rec-section { grid-template-columns: 1fr; }
+
+      .mic-wrap { width: 100%; }
+      .mic-circle { width: 88px; height: 88px; }
+      .mic-icon   { width: 40px; height: 40px; }
+
+      .sub-row { grid-template-columns: 1fr 1fr; }
+      .sub-btn.wide { grid-column: 1 / -1; }
+
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .stat-wide { grid-column: 1 / -1; }
+
+      .live-grid { grid-template-columns: 1fr; gap: 8px; }
+
+      .modal { padding: 26px 20px; }
+    }
+
+    @media (max-width: 360px) {
+      .brand-org { display: none; }
+      .brand-product { font-size: 16px; }
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="shell">
-      <aside class="panel">
-        <h2 class="sectionTitle">Controls</h2>
+<div class="app">
 
-        <div class="controls">
-          <button id="startBtn" class="mainBtn primary">◎ Rec</button>
-          <button id="stopBtn" class="mainBtn danger" disabled>Stop Recording</button>
-          <button id="askChatGPTBtn" class="mainBtn accent">ChatGPTに議事録を依頼</button>
-        </div>
-
-        <div class="subBtns">
-          <button id="copyBtn" class="subBtn ghost">全文コピー</button>
-          <button id="saveAudioBtn" class="subBtn ghost">録音保存</button>
-          <button id="clearBtn" class="subBtn ghost">クリア</button>
-        </div>
-
-        <div class="micRow">
-          <div class="wave" id="wave">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-          </div>
-          <div class="mini" id="micHint">マイク許可後に開始</div>
-        </div>
-
-        <div class="mini">
-          設定は右上の⚙️から変更できます。
-        </div>
-      </aside>
-
-      <main class="main">
-        <section class="box topbar">
-          <div class="brand">
-            <div class="brandDot" id="statusDot"></div>
-            <div class="brandText">
-              <h1>VoiceScribe AI</h1>
-              <p id="statusText">STANDBY</p>
-            </div>
-          </div>
-
-          <div class="topActions">
-            <div class="chip" id="clock">--:--:--</div>
-            <div class="chip" id="recognitionModeChip">Speech: Browser Engine</div>
-            <a class="gearBtn" href="settings.html" aria-label="設定">⚙️</a>
-          </div>
-        </section>
-
-        <section class="box dashboard">
-          <h2 class="sectionTitle">Meeting Dashboard</h2>
-          <div class="stats">
-            <div class="stat">
-              <div class="value" id="dur">0:00</div>
-              <div class="label">経過時間</div>
-            </div>
-            <div class="stat">
-              <div class="value" id="langMix">EN 0% / JA 0%</div>
-              <div class="label">会議内の言語構成比</div>
-            </div>
-          </div>
-        </section>
-
-        <section class="box live">
-          <h2 class="sectionTitle">Live View</h2>
-          <div class="liveGrid">
-            <div class="liveCard">
-              <strong>途中原文</strong>
-              <div class="liveText" id="interimOrig">まだありません</div>
-            </div>
-            <div class="liveCard">
-              <strong>途中翻訳</strong>
-              <div class="liveText translate" id="interimTran">まだありません</div>
-            </div>
-            <div class="liveCard">
-              <strong>最新確定</strong>
-              <div class="liveText" id="latestFinal">まだありません</div>
-            </div>
-          </div>
-        </section>
-
-        <section class="box transcript">
-          <div class="transcriptTop">
-            <h2 class="sectionTitle" style="margin:0;">Transcript</h2>
-            <div class="toolbar">
-              <button id="scrollBottomBtn" class="ghost">末尾へ</button>
-            </div>
-          </div>
-
-          <div class="log" id="log">
-            <div class="placeholder" id="placeholder">
-              録音開始で、文字起こしと日本語表示が始まります。
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
-  </div>
-
-  <!-- ChatGPT 案内モーダル -->
-  <div class="modal-overlay hidden" id="gptModal">
-    <div class="modal-box">
-      <h2>📋 ChatGPTで議事録を作成</h2>
-      <p>プロンプトをクリップボードにコピーしました。<br>以下の手順でChatGPTに貼り付けてください。</p>
-      <div class="step"><strong>① ChatGPTを開く</strong><br>下のボタンでChatGPTアプリ（またはブラウザ版）を開きます。</div>
-      <div class="step"><strong>② 貼り付けて送信</strong><br>テキスト入力欄を長押し →「ペースト」→ 送信ボタンを押してください。</div>
-      <div class="modal-actions">
-        <button id="modalOpenGPT" class="accent">ChatGPTを開く</button>
-        <button id="modalClose" class="ghost">閉じる</button>
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="hmj-brand">
+      <svg class="shield" viewBox="0 0 60 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M30 3L5 13V37C5 52.5 16 65.8 30 70.5C44 65.8 55 52.5 55 37V13L30 3Z"
+              fill="#0c1628" stroke="#c9a258" stroke-width="2.2"/>
+        <line x1="13" y1="24" x2="13" y2="48" stroke="#c9a258" stroke-width="3" stroke-linecap="round"/>
+        <line x1="13" y1="36" x2="23" y2="36" stroke="#c9a258" stroke-width="3" stroke-linecap="round"/>
+        <line x1="23" y1="24" x2="23" y2="48" stroke="#c9a258" stroke-width="3" stroke-linecap="round"/>
+        <line x1="26" y1="48" x2="26" y2="24" stroke="#c9a258" stroke-width="3" stroke-linecap="round"/>
+        <line x1="26" y1="24" x2="32" y2="35" stroke="#c9a258" stroke-width="3" stroke-linecap="round"/>
+        <line x1="32" y1="35" x2="38" y2="24" stroke="#c9a258" stroke-width="3" stroke-linecap="round"/>
+        <line x1="38" y1="24" x2="38" y2="48" stroke="#c9a258" stroke-width="3" stroke-linecap="round"/>
+        <line x1="42" y1="24" x2="42" y2="44" stroke="#c9a258" stroke-width="3" stroke-linecap="round"/>
+        <path d="M42 44 C42 49 47 49 47 45" stroke="#c9a258" stroke-width="3" stroke-linecap="round" fill="none"/>
+      </svg>
+      <div class="brand-words">
+        <div class="brand-org">Hotel Management Japan</div>
+        <div class="brand-product">Voice<em>Scribe</em></div>
       </div>
     </div>
-  </div>
 
-  <div class="toast" id="toast"></div>
+    <div class="topbar-mid">
+      <div class="status-pill" id="statusPill">
+        <div class="sdot" id="sdot"></div>
+        <span id="statusText">STANDBY</span>
+      </div>
+    </div>
 
-  <script>
-    const $ = (id) => document.getElementById(id);
+    <div class="topbar-right">
+      <span class="clock" id="clock">--:--:--</span>
+    </div>
+  </header>
 
-    const STORAGE_SESSION_KEY = 'voicescribe_session_v4';
-    const STORAGE_SETTINGS_KEY = 'voicescribe_settings_v1';
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
 
-    const WORKER_BASE_URL = 'https://divine-moon-7052.jsmgoo11185.workers.dev';
-    const PAUSE_MS = 700;
-    const MIN_INTERIM_LEN = 18;
-    const FINAL_MERGE_MS = 2200;
+    <!-- Recording -->
+    <div class="sb">
+      <div class="sb-lbl">Recording</div>
+      <div class="rec-section">
 
-    const DEFAULT_SETTINGS = {
-      promptSpeakerDiarization: true,
-      promptNameExtraction: true,
-      promptPostAiCleanup: true
-    };
-
-    let recognition = null;
-    let recognitionInstanceId = 0;
-    let mediaRecorder = null;
-    let mediaStream = null;
-    let chunks = [];
-    let audioBlob = null;
-
-    let running = false;
-    let startedAt = null;
-    let timer = null;
-
-    let entries = [];
-    let stats = { english: 0, japanese: 0 };
-
-    let interimTimer = null;
-    let latestInterim = '';
-    let latestInterimTranslated = '';
-    let lastInterimAt = 0;
-    let lastInterimRequestedText = '';
-    let lastInterimRenderedText = '';
-    let interimRequestSeq = 0;
-    let latestAcceptedInterimSeq = 0;
-
-    let activePseudoSpeaker = 'Speaker ?';
-    let latestFinalText = '';
-
-    // ─────────────────────────────────────────
-    // Settings
-    // ─────────────────────────────────────────
-    function loadSettings(){
-      try{
-        const raw = localStorage.getItem(STORAGE_SETTINGS_KEY);
-        if(!raw) return { ...DEFAULT_SETTINGS };
-        const parsed = JSON.parse(raw);
-        return { ...DEFAULT_SETTINGS, ...parsed };
-      }catch(_){
-        return { ...DEFAULT_SETTINGS };
-      }
-    }
-
-    // ─────────────────────────────────────────
-    // Toast
-    // ─────────────────────────────────────────
-    function toast(msg){
-      const el = $('toast');
-      el.textContent = msg;
-      el.classList.add('show');
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => {
-        el.classList.remove('show');
-      }, 3200);
-    }
-
-    // ─────────────────────────────────────────
-    // Clock
-    // ─────────────────────────────────────────
-    function updateClock(){
-      $('clock').textContent = new Date().toLocaleTimeString('ja-JP', { hour12:false });
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
-
-    // ─────────────────────────────────────────
-    // Utils
-    // ─────────────────────────────────────────
-    function escHtml(str){
-      return String(str)
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;');
-    }
-
-    function detectLang(text){
-      const s = String(text || '').trim();
-      if(!s) return 'other';
-      const ja = (s.match(/[ぁ-んァ-ン一-龥]/g) || []).length;
-      const en = (s.match(/[A-Za-z]/g) || []).length;
-      if(ja === 0 && en === 0) return 'other';
-      if(ja > en) return 'ja';
-      if(en > ja) return 'en';
-      return en > 0 ? 'en' : 'ja';
-    }
-
-    function updateStats(){
-      const total = stats.english + stats.japanese;
-      const enRatio = total ? Math.round((stats.english / total) * 100) : 0;
-      const jaRatio = total ? Math.round((stats.japanese / total) * 100) : 0;
-      $('langMix').textContent = `EN ${enRatio}% / JA ${jaRatio}%`;
-    }
-
-    function setUi(isOn){
-      running = isOn;
-      $('statusDot').classList.toggle('on', isOn);
-      $('statusText').textContent = isOn ? 'RECORDING' : 'STANDBY';
-      $('wave').classList.toggle('on', isOn);
-      $('startBtn').disabled = isOn;
-      $('stopBtn').disabled = !isOn;
-      $('micHint').textContent = isOn ? '録音中' : 'マイク許可後に開始';
-    }
-
-    function tickDuration(){
-      if(!startedAt){
-        $('dur').textContent = '0:00';
-        return;
-      }
-      const sec = Math.floor((Date.now() - startedAt) / 1000);
-      const h = Math.floor(sec / 3600);
-      const m = Math.floor((sec % 3600) / 60);
-      const s = String(sec % 60).padStart(2,'0');
-      $('dur').textContent = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${s}` : `${m}:${s}`;
-    }
-
-    // ─────────────────────────────────────────
-    // Session save / restore
-    // ─────────────────────────────────────────
-    function saveSession(){
-      try{
-        localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify({
-          entries,
-          stats,
-          latestFinalText
-        }));
-      }catch(_){}
-    }
-
-    function restoreSession(showToast = false){
-      try{
-        const raw = localStorage.getItem(STORAGE_SESSION_KEY);
-        if(!raw) return;
-        const parsed = JSON.parse(raw);
-        entries = Array.isArray(parsed.entries) ? parsed.entries : [];
-        stats = parsed.stats || { english:0, japanese:0 };
-        latestFinalText = parsed.latestFinalText || '';
-        $('latestFinal').textContent = latestFinalText || 'まだありません';
-        renderEntries();
-        updateStats();
-        if(showToast){
-          toast('前回の文字起こし表示を復元しました。音声データは復元されません。');
-        }
-      }catch(_){}
-    }
-
-    // ─────────────────────────────────────────
-    // Render
-    // ─────────────────────────────────────────
-    function renderEntries(){
-      const log = $('log');
-      if(!entries.length){
-        log.innerHTML = '<div class="placeholder" id="placeholder">録音開始で、文字起こしと日本語表示が始まります。</div>';
-        return;
-      }
-      log.innerHTML = '';
-      for(const item of entries){
-        const wrap = document.createElement('div');
-        wrap.className = 'entry';
-
-        // 日本語エントリは翻訳ブロックなし（原文のみ表示）
-        const tranBlock = (item.translation && item.langTag !== 'ja')
-          ? `<div class="tran">${escHtml(item.translation)}</div>`
-          : '';
-
-        wrap.innerHTML = `
-          <div class="meta">
-            <span>${escHtml(item.time)}</span>
-            <span class="pill">${escHtml(item.speaker || 'Speaker ?')}</span>
-            <span class="pill ${item.langTag === 'ja' ? 'lng-ja' : 'lng-en'}">${item.langTag === 'ja' ? '日本語' : 'English / Other'}</span>
+        <!-- ① 大きなマイクボタン（四角枠 + ゴールド円 + SVGマイク） -->
+        <div class="mic-wrap" id="startBtn" role="button" tabindex="0" aria-label="録音開始">
+          <div class="mic-circle">
+            <!-- SVG マイクアイコン（白） -->
+            <svg class="mic-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="15" y="4" width="14" height="22" rx="7" fill="rgba(255,255,255,0.92)"/>
+              <path d="M9 22C9 29.18 14.82 35 22 35C29.18 35 35 29.18 35 22"
+                    stroke="rgba(255,255,255,0.92)" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <line x1="22" y1="35" x2="22" y2="41" stroke="rgba(255,255,255,0.92)" stroke-width="3" stroke-linecap="round"/>
+              <line x1="15" y1="41" x2="29" y2="41" stroke="rgba(255,255,255,0.92)" stroke-width="3" stroke-linecap="round"/>
+              <line x1="18" y1="13" x2="18" y2="19" stroke="rgba(255,255,255,0.45)" stroke-width="2" stroke-linecap="round"/>
+            </svg>
           </div>
-          <div class="orig">${escHtml(item.original || '')}</div>
-          ${tranBlock}
-        `;
-        log.appendChild(wrap);
+          <div class="mic-label" id="micLabel">タップして録音</div>
+        </div>
+
+        <!-- 右側：STOP + GPT -->
+        <div class="right-btns btn-stack">
+          <button class="stop-btn" id="stopBtn" disabled>■ STOP</button>
+          <button class="gpt-btn" id="askChatGPTBtn">✦ 議事録依頼</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="sb">
+      <div class="sb-lbl">Actions</div>
+      <div class="sub-row">
+        <button class="sub-btn" id="copyBtn">全文コピー</button>
+        <button class="sub-btn" id="saveAudioBtn">録音保存</button>
+        <button class="sub-btn wide" id="clearBtn">クリア</button>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="sb">
+      <div class="sb-lbl">Status</div>
+      <div class="stat-grid">
+        <div class="stat-card stat-wide">
+          <div class="sv" id="dur">0:00</div>
+          <div class="sl">経過時間</div>
+        </div>
+        <div class="stat-card">
+          <div class="sv" id="statEN" style="font-size:16px;">EN 0%</div>
+          <div class="sl">英語比率</div>
+        </div>
+        <div class="stat-card">
+          <div class="sv" id="statJA" style="font-size:16px;">JA 0%</div>
+          <div class="sl">日本語比率</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="live-area">
+      <div class="area-lbl">Live View</div>
+      <div class="live-grid">
+        <div class="lc">
+          <div class="lc-lbl">途中原文</div>
+          <div class="lc-txt" id="interimOrig">—</div>
+        </div>
+        <div class="lc">
+          <div class="lc-lbl">途中翻訳</div>
+          <div class="lc-txt gold" id="interimTran">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tx-area">
+      <div class="tx-head">
+        <span class="area-lbl" style="margin:0;">Transcript</span>
+        <button class="scroll-btn" id="scrollBottomBtn">末尾へ ↓</button>
+      </div>
+      <div class="log" id="log">
+        <div class="placeholder">
+          <span class="ph-ico">🎙</span>
+          録音を開始すると文字起こしがここに表示されます。<br>
+          日本語はそのまま記録、英語は日本語訳付きで記録されます。
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay hidden" id="gptModal">
+  <div class="modal">
+    <span class="modal-icon">📋</span>
+    <div class="modal-title">コピー完了！</div>
+    <div class="modal-body">
+      文字起こし全文と議事録依頼の<br>
+      プロンプトをコピーしました。<br><br>
+      <strong>ChatGPTを開いて、<br>入力欄に貼り付けて送信</strong>してください。
+    </div>
+    <div class="modal-acts">
+      <button class="m-open" id="modalOpenGPT">ChatGPTを開く →</button>
+      <button class="m-close" id="modalClose">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  const STORAGE_SESSION_KEY = 'voicescribe_session_v4';
+  const WORKER_BASE_URL     = 'https://divine-moon-7052.jsmgoo11185.workers.dev';
+  const PAUSE_MS            = 700;
+  const MIN_INTERIM_LEN     = 18;
+  const FINAL_MERGE_MS      = 2200;
+
+  let recognition = null, recId = 0;
+  let mediaRecorder = null, mediaStream = null;
+  let chunks = [], audioBlob = null;
+  let running = false, startedAt = null, timer = null;
+  let entries = [], stats = { english: 0, japanese: 0 };
+  let iTimer = null;
+  let latestInterim = '', lastInterimAt = 0;
+  let lastIReq = '', lastIRend = '';
+  let iSeq = 0, iSeqAcc = 0;
+  let latestFinalText = '';
+
+  /* clock */
+  function upClock(){ $('clock').textContent = new Date().toLocaleTimeString('ja-JP',{hour12:false}); }
+  upClock(); setInterval(upClock, 1000);
+
+  /* toast */
+  function toast(msg){
+    const el=$('toast'); el.textContent=msg; el.classList.add('show');
+    clearTimeout(window.__tt);
+    window.__tt=setTimeout(()=>el.classList.remove('show'), 3200);
+  }
+
+  /* utils */
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function lang(text){
+    const s=String(text||'').trim();
+    if(!s) return 'other';
+    const ja=(s.match(/[ぁ-んァ-ン一-龥]/g)||[]).length;
+    const en=(s.match(/[A-Za-z]/g)||[]).length;
+    if(ja===0&&en===0) return 'other';
+    return ja>en ? 'ja' : (en>0 ? 'en' : 'ja');
+  }
+
+  function upStats(){
+    const t=stats.english+stats.japanese;
+    $('statEN').textContent=`EN ${t?Math.round(stats.english/t*100):0}%`;
+    $('statJA').textContent=`JA ${t?Math.round(stats.japanese/t*100):0}%`;
+  }
+
+  /* UI state — マイクボタンの見た目も切り替え */
+  function setUi(on){
+    running=on;
+    $('sdot').classList.toggle('on',on);
+    $('statusPill').classList.toggle('on',on);
+    $('statusText').textContent=on?'REC ●':'STANDBY';
+    $('stopBtn').disabled=!on;
+
+    const wrap=$('startBtn');
+    if(on){
+      wrap.classList.add('recording');
+      wrap.classList.add('disabled');
+      $('micLabel').textContent='録音中…';
+    }else{
+      wrap.classList.remove('recording');
+      wrap.classList.remove('disabled');
+      $('micLabel').textContent='タップして録音';
+    }
+  }
+
+  function tickDur(){
+    if(!startedAt){$('dur').textContent='0:00';return;}
+    const s=Math.floor((Date.now()-startedAt)/1000);
+    const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=String(s%60).padStart(2,'0');
+    $('dur').textContent=h>0?`${h}:${String(m).padStart(2,'0')}:${ss}`:`${m}:${ss}`;
+  }
+
+  /* session */
+  function save(){
+    try{ localStorage.setItem(STORAGE_SESSION_KEY,JSON.stringify({entries,stats,latestFinalText})); }catch(_){}
+  }
+
+  function restore(){
+    try{
+      const raw=localStorage.getItem(STORAGE_SESSION_KEY);
+      if(!raw) return;
+      const p=JSON.parse(raw);
+      entries=Array.isArray(p.entries)?p.entries:[];
+      stats=p.stats||{english:0,japanese:0};
+      latestFinalText=p.latestFinalText||'';
+      render(); upStats();
+    }catch(_){}
+  }
+
+  /* render */
+  function render(){
+    const log=$('log');
+    if(!entries.length){
+      log.innerHTML=`<div class="placeholder"><span class="ph-ico">🎙</span>録音を開始すると文字起こしがここに表示されます。<br>日本語はそのまま記録、英語は日本語訳付きで記録されます。</div>`;
+      return;
+    }
+    log.innerHTML='';
+    for(const item of entries){
+      const w=document.createElement('div');
+      w.className='entry';
+      const tr=(item.translation&&item.langTag!=='ja')?`<div class="e-tran">${esc(item.translation)}</div>`:'';
+      w.innerHTML=`
+        <div class="e-meta">
+          <span class="e-time">${esc(item.time)}</span>
+          <span class="tag tag-spk">${esc(item.speaker||'Speaker ?')}</span>
+          <span class="tag ${item.langTag==='ja'?'tag-ja':'tag-en'}">${item.langTag==='ja'?'JA':'EN'}</span>
+        </div>
+        <div class="e-orig">${esc(item.original||'')}</div>${tr}`;
+      log.appendChild(w);
+    }
+    log.scrollTop=log.scrollHeight;
+  }
+
+  function canMerge(prev,clean,lt){
+    if(!prev||prev.langTag!==lt||!prev._ts) return false;
+    if((Date.now()-prev._ts)>FINAL_MERGE_MS) return false;
+    if(/[.!?。！？:]$/.test(String(prev.original||'').trim())) return false;
+    return true;
+  }
+
+  /* translate */
+  async function tl(text){
+    try{
+      const c=String(text||'').trim();
+      if(!c||lang(c)==='ja') return null;
+      const r=await fetch(`${WORKER_BASE_URL}/translate?text=${encodeURIComponent(c)}&source=EN&target=JA`);
+      if(!r.ok) throw new Error(r.status);
+      const d=await r.json();
+      return d?.translations?.[0]?.text||null;
+    }catch(e){ console.error(e); toast('翻訳エラー'); return null; }
+  }
+
+  /* add entry */
+  async function addEntry(text){
+    const c=String(text||'').trim();
+    if(!c) return;
+    const lt=lang(c);
+    if(lt==='en') stats.english++;
+    if(lt==='ja') stats.japanese++;
+    const prev=entries.length?entries[entries.length-1]:null;
+    let item;
+    if(canMerge(prev,c,lt)){
+      prev.original=`${prev.original} ${c}`.replace(/\s+/g,' ').trim();
+      prev._ts=Date.now(); item=prev;
+    }else{
+      item={time:new Date().toLocaleTimeString('ja-JP',{hour12:false}),
+            original:c,translation:null,speaker:'Speaker ?',langTag:lt,_ts:Date.now()};
+      entries.push(item);
+    }
+    if(lt==='ja'){
+      latestFinalText=item.original;
+      render(); upStats(); save(); return;
+    }
+    latestFinalText=item.original;
+    render(); upStats();
+    const t=await tl(item.original);
+    if(t){ item.translation=t; latestFinalText=t; render(); }
+    save();
+  }
+
+  /* interim */
+  function schedI(){
+    clearTimeout(iTimer);
+    const st=latestInterim, ms=++iSeq;
+    iTimer=setTimeout(async()=>{
+      if((Date.now()-lastInterimAt)<PAUSE_MS){schedI();return;}
+      const c=String(latestInterim||'').trim();
+      if(!c){$('interimTran').textContent='—';return;}
+      if(c.length<MIN_INTERIM_LEN||c!==st||c===lastIReq||c===lastIRend) return;
+      const l=lang(c);
+      if(l==='ja'){$('interimTran').textContent=c;lastIRend=c;return;}
+      lastIReq=c; $('interimTran').textContent='翻訳中…';
+      const t=await tl(c);
+      if(ms<iSeqAcc||c!==latestInterim) return;
+      iSeqAcc=ms; lastIRend=c;
+      $('interimTran').textContent=t||'翻訳なし';
+    }, PAUSE_MS);
+  }
+
+  /* recognition */
+  function buildRec(){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR) return null;
+    const r=new SR(), mid=++recId;
+    r.lang='ja-JP'; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
+    r.onresult=async ev=>{
+      if(mid!==recId) return;
+      let interim='', fin=false;
+      for(let i=ev.resultIndex;i<ev.results.length;i++){
+        const res=ev.results[i], txt=res[0]?.transcript?.trim();
+        if(!txt) continue;
+        if(res.isFinal){
+          fin=true; clearTimeout(iTimer); iTimer=null;
+          iSeq++; latestInterim=''; lastIReq=''; lastIRend='';
+          $('interimOrig').textContent=txt;
+          $('interimTran').textContent=lang(txt)==='ja'?txt:'正式翻訳中…';
+          await addEntry(txt);
+          $('interimOrig').textContent='—'; $('interimTran').textContent='—';
+        }else{ interim+=txt+' '; }
       }
-      log.scrollTop = log.scrollHeight;
-    }
-
-    function scrollTranscriptBottom(){
-      $('log').scrollTop = $('log').scrollHeight;
-    }
-
-    function createPseudoSpeaker(){
-      return 'Speaker ?';
-    }
-
-    function shouldMergeWithPreviousEntry(prev, clean, langTag){
-      if(!prev) return false;
-      if(prev.langTag !== langTag) return false;
-      if(!prev._ts) return false;
-      const within = (Date.now() - prev._ts) <= FINAL_MERGE_MS;
-      if(!within) return false;
-      const prevText = String(prev.original || '').trim();
-      if(/[.!?。！？:]$/.test(prevText)) return false;
-      return true;
-    }
-
-    // ─────────────────────────────────────────
-    // Translation（英語のみ DeepL 経由）
-    // ─────────────────────────────────────────
-    async function translateWithDeepL(text){
-      try{
-        const clean = String(text || '').trim();
-        if(!clean) return null;
-
-        // ★ 日本語はそのまま返す（翻訳しない）
-        const lang = detectLang(clean);
-        if(lang === 'ja') return null;
-
-        const endpoint = `${WORKER_BASE_URL}/translate?text=${encodeURIComponent(clean)}&source=EN&target=JA`;
-        const res = await fetch(endpoint, { method:'GET' });
-        if(!res.ok) throw new Error(`Worker error: ${res.status}`);
-        const data = await res.json();
-        return data?.translations?.[0]?.text || null;
-      }catch(e){
-        console.error(e);
-        toast('翻訳エラー');
-        return null;
+      if(!fin&&interim){
+        latestInterim=interim.trim(); lastInterimAt=Date.now();
+        $('interimOrig').textContent=latestInterim;
+        if(latestInterim.length>=MIN_INTERIM_LEN) schedI();
       }
-    }
+    };
+    r.onerror=e=>{
+      if(mid!==recId) return;
+      if(e.error==='not-allowed')        toast('マイク権限が拒否されました。');
+      else if(e.error==='audio-capture') toast('音声入力が見つかりません。');
+      else if(e.error!=='no-speech'&&e.error!=='aborted') toast('音声認識エラー: '+e.error);
+    };
+    r.onend=()=>{
+      if(mid!==recId||!running) return;
+      try{recognition=buildRec();if(recognition)recognition.start();}catch(_){}
+    };
+    return r;
+  }
 
-    // ─────────────────────────────────────────
-    // Final entry
-    // ─────────────────────────────────────────
-    async function addFinalEntry(text){
-      const clean = String(text || '').trim();
-      if(!clean) return;
+  /* transcript text */
+  function getTxt(){
+    return entries.map(e=>{
+      if(e.langTag==='ja') return `[${e.time}] ${e.speaker}\n${e.original}`;
+      const tr=e.translation?`\n日本語: ${e.translation}`:'';
+      return `[${e.time}] ${e.speaker}\n原文: ${e.original}${tr}`;
+    }).join('\n\n');
+  }
 
-      $('placeholder')?.remove();
+  async function copyAll(){
+    const t=getTxt();
+    if(!t){toast('コピーする内容がありません。');return;}
+    try{ await navigator.clipboard.writeText(t); toast('全文をコピーしました。'); }
+    catch(_){ toast('コピーに失敗しました。'); }
+  }
 
-      const langTag = detectLang(clean);
-      if(langTag === 'en') stats.english += 1;
-      if(langTag === 'ja') stats.japanese += 1;
+  /* audio */
+  function dlBlob(blob,name){
+    const u=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=u; a.download=name; document.body.appendChild(a); a.click();
+    a.remove(); setTimeout(()=>URL.revokeObjectURL(u),1500);
+  }
 
-      const prev = entries.length ? entries[entries.length - 1] : null;
-      let item;
+  function baseName(){
+    const d=new Date();
+    return `voicescribe_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+  }
 
-      if(shouldMergeWithPreviousEntry(prev, clean, langTag)){
-        prev.original = `${prev.original} ${clean}`.replace(/\s+/g,' ').trim();
-        prev._ts = Date.now();
-        item = prev;
-      }else{
-        item = {
-          time: new Date().toLocaleTimeString('ja-JP', { hour12:false }),
-          original: clean,
-          translation: null,
-          speaker: activePseudoSpeaker || createPseudoSpeaker(),
-          langTag,
-          _ts: Date.now()
-        };
-        entries.push(item);
-      }
+  function saveAudio(){
+    if(!audioBlob){toast('録音データがありません。停止後に保存できます。');return;}
+    dlBlob(audioBlob,`${baseName()}.${audioBlob.type.includes('mp4')?'m4a':'webm'}`);
+  }
 
-      // ★ 日本語の場合は translation を設定しない（原文をそのままログ表示）
-      if(langTag === 'ja'){
-        latestFinalText = item.original;
-        $('latestFinal').textContent = latestFinalText;
-        renderEntries();
-        updateStats();
-        saveSession();
-        return;
-      }
-
-      // 英語の場合は DeepL で翻訳
-      latestFinalText = item.original;
-      $('latestFinal').textContent = latestFinalText;
-      renderEntries();
-      updateStats();
-
-      const translated = await translateWithDeepL(item.original);
-      if(translated){
-        item.translation = translated;
-        latestFinalText = translated;
-        $('latestFinal').textContent = latestFinalText;
-        renderEntries();
-      }
-
-      saveSession();
-    }
-
-    // ─────────────────────────────────────────
-    // Interim translation（英語のみ）
-    // ─────────────────────────────────────────
-    function scheduleInterimTranslation(){
-      clearTimeout(interimTimer);
-      const scheduledText = latestInterim;
-      const mySeq = ++interimRequestSeq;
-
-      interimTimer = setTimeout(async () => {
-        const silence = Date.now() - lastInterimAt;
-        if(silence < PAUSE_MS){
-          scheduleInterimTranslation();
-          return;
-        }
-
-        const clean = String(latestInterim || '').trim();
-        if(!clean){
-          $('interimTran').textContent = 'まだありません';
-          return;
-        }
-        if(clean.length < MIN_INTERIM_LEN) return;
-        if(clean !== scheduledText){
-          scheduleInterimTranslation();
-          return;
-        }
-        if(clean === lastInterimRequestedText || clean === lastInterimRenderedText) return;
-
-        const lang = detectLang(clean);
-
-        // ★ 途中テキストも日本語ならそのまま表示（翻訳しない）
-        if(lang === 'ja'){
-          latestInterimTranslated = clean;
-          lastInterimRenderedText = clean;
-          $('interimTran').textContent = clean;
-          return;
-        }
-
-        lastInterimRequestedText = clean;
-        $('interimTran').textContent = '翻訳中…';
-
-        const translated = await translateWithDeepL(clean);
-        if(mySeq < latestAcceptedInterimSeq) return;
-        if(clean !== latestInterim) return;
-
-        latestAcceptedInterimSeq = mySeq;
-        latestInterimTranslated = translated || '翻訳なし';
-        lastInterimRenderedText = clean;
-        $('interimTran').textContent = latestInterimTranslated;
-      }, PAUSE_MS);
-    }
-
-    // ─────────────────────────────────────────
-    // Speech Recognition
-    // ─────────────────────────────────────────
-    function buildRecognition(){
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!SR) return null;
-
-      const r = new SR();
-      const myId = ++recognitionInstanceId;
-
-      r.lang = 'ja-JP'; // ★ 日本語優先モードに変更（日本語・英語混在対応）
-      r.continuous = true;
-      r.interimResults = true;
-      r.maxAlternatives = 1;
-
-      r.onresult = async (event) => {
-        if(myId !== recognitionInstanceId) return;
-
-        let interimText = '';
-        let hadFinal = false;
-
-        for(let i = event.resultIndex; i < event.results.length; i++){
-          const result = event.results[i];
-          const text = result[0]?.transcript?.trim();
-          if(!text) continue;
-
-          if(result.isFinal){
-            hadFinal = true;
-            clearTimeout(interimTimer);
-            interimTimer = null;
-            interimRequestSeq += 1;
-            latestInterim = '';
-            latestInterimTranslated = '';
-            lastInterimRequestedText = '';
-            lastInterimRenderedText = '';
-
-            $('interimOrig').textContent = text;
-
-            const lang = detectLang(text);
-            $('interimTran').textContent = lang === 'ja' ? text : '正式翻訳中…';
-
-            await addFinalEntry(text);
-
-            $('interimOrig').textContent = 'まだありません';
-            $('interimTran').textContent = 'まだありません';
-          }else{
-            interimText += text + ' ';
-          }
-        }
-
-        if(!hadFinal && interimText){
-          latestInterim = interimText.trim();
-          lastInterimAt = Date.now();
-          $('interimOrig').textContent = latestInterim;
-          if(latestInterim.length >= MIN_INTERIM_LEN){
-            scheduleInterimTranslation();
-          }
-        }
-      };
-
-      r.onerror = (e) => {
-        if(myId !== recognitionInstanceId) return;
-        if(e.error === 'not-allowed'){
-          toast('マイク権限が拒否されました。');
-        }else if(e.error === 'audio-capture'){
-          toast('音声入力が見つかりません。');
-        }else if(e.error !== 'no-speech' && e.error !== 'aborted'){
-          toast('音声認識エラー: ' + e.error);
-        }
-      };
-
-      r.onend = () => {
-        if(myId !== recognitionInstanceId) return;
-        if(!running) return;
-        try{
-          recognition = buildRecognition();
-          if(recognition) recognition.start();
-        }catch(_){}
-      };
-
-      return r;
-    }
-
-    // ─────────────────────────────────────────
-    // Transcript text builder
-    // ─────────────────────────────────────────
-    function getTranscriptText(){
-      return entries.map(e => {
-        // 日本語エントリは翻訳行なし
-        if(e.langTag === 'ja'){
-          return `[${e.time}] ${e.speaker}\n${e.original}`;
-        }
-        const tr = e.translation ? `\n日本語: ${e.translation}` : '';
-        return `[${e.time}] ${e.speaker}\n原文: ${e.original}${tr}`;
-      }).join('\n\n');
-    }
-
-    async function copyAll(){
-      const text = getTranscriptText();
-      if(!text){
-        toast('コピーする内容がありません。');
-        return;
-      }
-      try{
-        await navigator.clipboard.writeText(text);
-        toast('全文をコピーしました。');
-      }catch(_){
-        toast('コピーに失敗しました。');
-      }
-    }
-
-    // ─────────────────────────────────────────
-    // Audio save
-    // ─────────────────────────────────────────
-    function downloadBlob(blob, fileName){
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
-    }
-
-    function makeBaseName(){
-      const d = new Date();
-      const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
-      return `voicescribe_${stamp}`;
-    }
-
-    function saveAudio(){
-      if(!audioBlob){
-        toast('録音データがありません。停止後に保存できます。');
-        return;
-      }
-      const ext = audioBlob.type.includes('mp4') ? 'm4a' : 'webm';
-      downloadBlob(audioBlob, `${makeBaseName()}.${ext}`);
-    }
-
-    // ─────────────────────────────────────────
-    // Minutes prompt builder
-    // ─────────────────────────────────────────
-    function buildMinutesPrompt(){
-      const settings = loadSettings();
-      const transcript = getTranscriptText();
-
-      const extra = [];
-      if(settings.promptSpeakerDiarization){
-        extra.push('可能であれば話者ごとに発言を整理してください。ただし、話者推定に自信がない箇所は「話者要確認」と明記してください。');
-      }
-      if(settings.promptNameExtraction){
-        extra.push('発話内の自己紹介、呼称、相手の呼びかけから、人名・役職名・組織名をできる範囲で抽出し、話者や関係者に反映してください。不確かな場合は「要確認」としてください。');
-      }
-      if(settings.promptPostAiCleanup){
-        extra.push('最後に、議事録として読みやすい日本語に整え、重複・言い淀み・断片表現を整理してください。');
-      }
-
-      return `以下は会議の文字起こしです。この文字起こしから議事録を作成してください。
+  /* prompt */
+  function buildPrompt(){
+    return `以下は会議の文字起こしです。この文字起こしから議事録を作成してください。
 
 やってほしいこと:
 1. 自然な日本語で議事録を作成
@@ -1161,7 +1040,9 @@
 3. 英語発言は自然な日本語に整える
 4. 推測は「要確認」と明記する
 5. 次回までの確認事項を3〜5個書く
-${extra.map((x, i) => `${6 + i}. ${x}`).join('\n')}
+6. 可能であれば話者ごとに発言を整理。話者推定に自信がない箇所は「話者要確認」と明記してください。
+7. 発話内の自己紹介・呼称・人名・役職・組織名を抽出し、話者や関係者に反映してください。不確かな場合は「要確認」。
+8. 最後に議事録として読みやすい日本語に整え、重複・言い淀み・断片表現を整理してください。
 
 補足:
 - ブラウザ音声認識由来の誤変換があり得ます
@@ -1169,202 +1050,105 @@ ${extra.map((x, i) => `${6 + i}. ${x}`).join('\n')}
 - 明確でない情報は断定せず「要確認」としてください
 
 --- 文字起こし開始 ---
-${transcript || '（文字起こしなし）'}
+${getTxt()||'（文字起こしなし）'}
 --- 文字起こし終了 ---`;
-    }
+  }
 
-    // ─────────────────────────────────────────
-    // ChatGPT ジャンプ（モーダル経由）
-    // ─────────────────────────────────────────
-    async function askChatGPTForMinutes(){
-      if(!entries.length){
-        toast('まず録音してください。');
-        return;
-      }
+  /* GPT */
+  async function askGPT(){
+    if(!entries.length){ toast('まず録音してください。'); return; }
+    try{ await navigator.clipboard.writeText(buildPrompt()); }
+    catch(_){ toast('クリップボードへのコピーに失敗しました。'); return; }
+    $('gptModal').classList.remove('hidden');
+  }
 
-      const prompt = buildMinutesPrompt();
-
-      // クリップボードにコピー
+  function openGPT(){
+    const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const and=/Android/i.test(navigator.userAgent);
+    if(ios){
+      window.location.href='chatgpt://';
+      setTimeout(()=>window.open('https://chatgpt.com/','_blank','noopener,noreferrer'),1200);
+    }else if(and){
       try{
-        await navigator.clipboard.writeText(prompt);
-      }catch(_){
-        toast('クリップボードへのコピーに失敗しました。');
-      }
-
-      // モーダル表示
-      $('gptModal').classList.remove('hidden');
+        window.location.href='intent://chatgpt.com/#Intent;scheme=https;package=com.openai.chatgpt;end';
+        setTimeout(()=>window.open('https://chatgpt.com/','_blank','noopener,noreferrer'),1200);
+      }catch(_){ window.open('https://chatgpt.com/','_blank','noopener,noreferrer'); }
+    }else{
+      window.open('https://chatgpt.com/','_blank','noopener,noreferrer');
     }
+    $('gptModal').classList.add('hidden');
+  }
 
-    function openChatGPT(){
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  $('modalOpenGPT').addEventListener('click', openGPT);
+  $('modalClose').addEventListener('click', ()=>$('gptModal').classList.add('hidden'));
 
-      if(isIOS){
-        // iOS: ChatGPTアプリへのディープリンクを試み、失敗したらブラウザ版へ
-        window.location.href = 'chatgpt://';
-        setTimeout(() => {
-          window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
-        }, 1200);
-      }else if(isMobile){
-        // Android等
-        try{
-          const intent = 'intent://chatgpt.com/#Intent;scheme=https;package=com.openai.chatgpt;end';
-          window.location.href = intent;
-          setTimeout(() => {
-            window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
-          }, 1200);
-        }catch(_){
-          window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
-        }
-      }else{
-        window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
-      }
+  /* recording */
+  async function startRec(){
+    if(running) return;
+    try{ mediaStream=await navigator.mediaDevices.getUserMedia({audio:true}); }
+    catch(_){ toast('マイクに接続できません。HTTPSで開き、マイク許可を確認してください。'); return; }
+    try{
+      const mt=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus'
+              :MediaRecorder.isTypeSupported('audio/mp4')?'audio/mp4':'';
+      mediaRecorder=new MediaRecorder(mediaStream,mt?{mimeType:mt}:undefined);
+      chunks=[]; audioBlob=null; latestInterim=''; lastIReq=''; lastIRend=''; iSeq=0; iSeqAcc=0;
+      mediaRecorder.ondataavailable=e=>{if(e.data?.size>0)chunks.push(e.data);};
+      mediaRecorder.onstop=()=>{
+        audioBlob=new Blob(chunks,{type:chunks[0]?.type||'audio/webm'});
+        if(audioBlob.size>0) saveAudio();
+      };
+      mediaRecorder.start(1000);
+    }catch(_){ toast('録音開始に失敗しました。'); return; }
 
-      $('gptModal').classList.add('hidden');
-    }
+    recognition=buildRec();
+    if(!recognition) toast('このブラウザはWeb Speech APIに未対応です。PC Chrome または iPhone Safari を試してください。');
+    else try{ recognition.start(); }catch(_){ toast('音声認識の開始に失敗しました。'); }
 
-    $('modalOpenGPT').addEventListener('click', openChatGPT);
-    $('modalClose').addEventListener('click', () => {
-      $('gptModal').classList.add('hidden');
-    });
+    startedAt=Date.now(); clearInterval(timer);
+    timer=setInterval(tickDur,1000); tickDur(); setUi(true);
+  }
 
-    // ─────────────────────────────────────────
-    // Recording start / stop
-    // ─────────────────────────────────────────
-    async function startRecording(){
-      try{
-        mediaStream = await navigator.mediaDevices.getUserMedia({ audio:true });
-      }catch(_){
-        toast('マイクに接続できません。HTTPSで開き、マイク許可を確認してください。');
-        return;
-      }
+  function stopRec(){
+    setUi(false); clearInterval(timer); timer=null;
+    clearTimeout(iTimer); iTimer=null; recId++;
+    if(recognition){ try{recognition.onend=null;recognition.stop();}catch(_){} recognition=null; }
+    if(mediaRecorder?.state!=='inactive') try{mediaRecorder.stop();}catch(_){}
+    if(mediaStream){ mediaStream.getTracks().forEach(t=>t.stop()); mediaStream=null; }
+    latestInterim='';
+    $('interimOrig').textContent='—'; $('interimTran').textContent='—';
+    save();
+  }
 
-      try{
-        const mimeType = window.MediaRecorder && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : (window.MediaRecorder && MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
+  function clearAll(){
+    if(running) stopRec();
+    entries=[]; stats={english:0,japanese:0}; latestFinalText='';
+    audioBlob=null; chunks=[]; startedAt=null;
+    $('dur').textContent='0:00';
+    $('statEN').textContent='EN 0%'; $('statJA').textContent='JA 0%';
+    $('interimOrig').textContent='—'; $('interimTran').textContent='—';
+    $('log').innerHTML=`<div class="placeholder"><span class="ph-ico">🎙</span>録音を開始すると文字起こしがここに表示されます。<br>日本語はそのまま記録、英語は日本語訳付きで記録されます。</div>`;
+    localStorage.removeItem(STORAGE_SESSION_KEY); toast('クリアしました。');
+  }
 
-        mediaRecorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
-        chunks = [];
-        audioBlob = null;
+  /* events */
+  // マイクボタン：クリック + キーボード（Enter/Space）対応
+  $('startBtn').addEventListener('click', startRec);
+  $('startBtn').addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' ') startRec(); });
+  $('stopBtn').addEventListener('click', stopRec);
+  $('askChatGPTBtn').addEventListener('click', askGPT);
+  $('copyBtn').addEventListener('click', copyAll);
+  $('saveAudioBtn').addEventListener('click', saveAudio);
+  $('clearBtn').addEventListener('click', clearAll);
+  $('scrollBottomBtn').addEventListener('click', ()=>$('log').scrollTop=$('log').scrollHeight);
 
-        latestInterim = '';
-        latestInterimTranslated = '';
-        lastInterimRequestedText = '';
-        lastInterimRenderedText = '';
-        interimRequestSeq = 0;
-        latestAcceptedInterimSeq = 0;
-        activePseudoSpeaker = createPseudoSpeaker();
+  window.addEventListener('beforeunload',()=>{
+    save();
+    try{if(mediaRecorder?.state!=='inactive')mediaRecorder.stop();}catch(_){}
+    try{if(mediaStream)mediaStream.getTracks().forEach(t=>t.stop());}catch(_){}
+    try{if(recognition)recognition.stop();}catch(_){}
+  });
 
-        mediaRecorder.ondataavailable = (e) => {
-          if(e.data && e.data.size > 0) chunks.push(e.data);
-        };
-
-        mediaRecorder.onstop = () => {
-          audioBlob = new Blob(chunks, { type: chunks[0]?.type || 'audio/webm' });
-          if(audioBlob && audioBlob.size > 0){
-            saveAudio();
-          }
-        };
-
-        mediaRecorder.start(1000);
-      }catch(_){
-        toast('録音開始に失敗しました。');
-        return;
-      }
-
-      recognition = buildRecognition();
-      if(!recognition){
-        toast('このブラウザはWeb Speech APIに未対応です。PC Chrome または iPhone Safari を試してください。');
-      }else{
-        try{
-          recognition.start();
-        }catch(_){
-          toast('音声認識の開始に失敗しました。');
-        }
-      }
-
-      startedAt = Date.now();
-      clearInterval(timer);
-      timer = setInterval(() => { tickDuration(); }, 1000);
-      tickDuration();
-      setUi(true);
-    }
-
-    function stopRecording(){
-      setUi(false);
-      clearInterval(timer);
-      timer = null;
-      clearTimeout(interimTimer);
-      interimTimer = null;
-      recognitionInstanceId += 1;
-
-      if(recognition){
-        try{
-          recognition.onend = null;
-          recognition.stop();
-        }catch(_){}
-      }
-      recognition = null;
-
-      if(mediaRecorder && mediaRecorder.state !== 'inactive'){
-        try{ mediaRecorder.stop(); }catch(_){}
-      }
-
-      if(mediaStream){
-        mediaStream.getTracks().forEach(t => t.stop());
-      }
-      mediaStream = null;
-
-      latestInterim = '';
-      latestInterimTranslated = '';
-      $('interimOrig').textContent = 'まだありません';
-      $('interimTran').textContent = 'まだありません';
-
-      saveSession();
-    }
-
-    function clearAll(){
-      if(running){ stopRecording(); }
-      entries = [];
-      stats = { english:0, japanese:0 };
-      latestFinalText = '';
-      audioBlob = null;
-      chunks = [];
-      startedAt = null;
-      $('dur').textContent = '0:00';
-      $('interimOrig').textContent = 'まだありません';
-      $('interimTran').textContent = 'まだありません';
-      $('latestFinal').textContent = 'まだありません';
-      $('log').innerHTML = '<div class="placeholder" id="placeholder">録音開始で、文字起こしと日本語表示が始まります。</div>';
-      localStorage.removeItem(STORAGE_SESSION_KEY);
-      updateStats();
-      toast('クリアしました。');
-    }
-
-    // ─────────────────────────────────────────
-    // Event listeners
-    // ─────────────────────────────────────────
-    $('startBtn').addEventListener('click', startRecording);
-    $('stopBtn').addEventListener('click', stopRecording);
-    $('askChatGPTBtn').addEventListener('click', askChatGPTForMinutes);
-    $('copyBtn').addEventListener('click', copyAll);
-    $('saveAudioBtn').addEventListener('click', saveAudio);
-    $('clearBtn').addEventListener('click', clearAll);
-    $('scrollBottomBtn').addEventListener('click', scrollTranscriptBottom);
-
-    window.addEventListener('beforeunload', () => {
-      saveSession();
-      try{ if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); }catch(_){}
-      try{ if(mediaStream) mediaStream.getTracks().forEach(t => t.stop()); }catch(_){}
-      try{ if(recognition) recognition.stop(); }catch(_){}
-    });
-
-    // ─────────────────────────────────────────
-    // Init
-    // ─────────────────────────────────────────
-    restoreSession(false);
-    updateStats();
-  </script>
+  restore(); upStats();
+</script>
 </body>
 </html>
